@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-type Tab = "compose" | "feeds" | "messages" | "analytics";
+type Tab = "compose" | "feeds" | "messages";
 type Platform = "Discord" | "Instagram" | "Facebook" | "LinkedIn" | "Snapchat";
 
 const platforms: { name: Platform; icon: string; color: string }[] = [
@@ -537,7 +537,7 @@ function AppHeader({
   tab: Tab;
   onMenu: () => void;
 }) {
-  const titles: Record<Tab, string> = { compose: "New Post", feeds: "Feeds", messages: "Messages", analytics: "Analytics" };
+  const titles: Record<Tab, string> = { compose: "New Post", feeds: "Feeds", messages: "Messages" };
   return (
     <header className="sticky top-0 z-30 flex h-[72px] items-center justify-end border-b border-[#CADFD9] bg-[#F1F8F6]/95 px-5 backdrop-blur-xl md:px-8">
       <h1 className="absolute left-1/2 -translate-x-1/2 text-[15px] tracking-[-0.01em]">{titles[tab]}</h1>
@@ -559,6 +559,7 @@ function MenuDrawer({
   onProfile,
   onSettings,
   onDigest,
+  onAnalytics,
   unreadCount,
 }: {
   open: boolean;
@@ -566,10 +567,12 @@ function MenuDrawer({
   onProfile: () => void;
   onSettings: () => void;
   onDigest: () => void;
+  onAnalytics: () => void;
   unreadCount: number;
 }) {
   const items: { label: string; detail: string; icon: UiIconName; onClick: () => void; badge?: number }[] = [
     { label: "Profile", detail: "Connected accounts & details", icon: "user", onClick: onProfile },
+    { label: "Analytics", detail: "Time saved & digital wellbeing", icon: "trending", onClick: onAnalytics },
     { label: "Notifications", detail: "Your grouped summary", icon: "bell", onClick: onDigest, badge: unreadCount },
     { label: "Settings", detail: "Appearance & preferences", icon: "settings", onClick: onSettings },
   ];
@@ -1030,7 +1033,7 @@ function ProfileView({
   );
 }
 
-function AnalyticsView({ connected }: { connected: Platform[] }) {
+function AnalyticsView({ connected, onBack }: { connected: Platform[]; onBack: () => void }) {
   const analytics = [
     {
       icon: "clock" as UiIconName,
@@ -1056,51 +1059,64 @@ function AnalyticsView({ connected }: { connected: Platform[] }) {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-[1120px] px-4 py-5 md:px-8 md:py-8">
-      <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
-        <div className="flex flex-col gap-3 border-b border-[#CADFD9] pb-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Digital wellbeing</p>
-            <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
-              Your analytics
-            </h2>
-            <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
-              A look at how staying connected through Quietly compares to checking every app on its own.
+    <div className="min-h-dvh bg-[#1D8575] pb-10 [font-family:'Manrope:Medium',sans-serif]">
+      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
+        <button
+          onClick={onBack}
+          className="rounded-full border border-white/20 px-4 py-2 text-[11px] transition hover:bg-white/10"
+        >
+          <span aria-hidden="true">←</span> Back
+        </button>
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-[14px]">Analytics</h1>
+        <span className="rounded-full bg-white/10 px-4 py-2 text-[10px] text-white/75">Digital wellbeing</span>
+      </header>
+
+      <div className="mx-auto w-full max-w-[1120px] px-4 py-5 md:px-8 md:py-8">
+        <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+          <div className="flex flex-col gap-3 border-b border-[#CADFD9] pb-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Digital wellbeing</p>
+              <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
+                Your analytics
+              </h2>
+              <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
+                A look at how staying connected through Quietly compares to checking every app on its own.
+              </p>
+            </div>
+            <span className="w-fit rounded-full bg-[#E8F3F0] px-3 py-2 text-[9px] text-[#04B89C]">
+              Updated today
+            </span>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {analytics.map((stat) => (
+              <div key={stat.label} className="rounded-[17px] border border-[#CADFD9] bg-[#F1F8F6] p-4">
+                <div
+                  className="grid size-9 place-items-center rounded-full bg-white"
+                  style={{ color: stat.accent }}
+                >
+                  <UiIcon name={stat.icon} />
+                </div>
+                <p
+                  className="mt-4 text-[26px] font-extrabold tracking-[-0.03em] [font-family:'Manrope:ExtraBold',sans-serif]"
+                  style={{ color: stat.accent }}
+                >
+                  {stat.value}
+                </p>
+                <p className="mt-1 text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{stat.label}</p>
+                <p className="mt-1.5 text-[10px] leading-relaxed text-[#557A73]">{stat.detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 rounded-[17px] bg-[#DBEBE7] p-4">
+            <p className="text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">Why this matters</p>
+            <p className="mt-2 text-[10px] leading-relaxed text-[#557A73]">
+              Grouping your feeds and messages means fewer apps to open and fewer interruptions pulling you back in — so you can stay in the loop and still post just as often, with more time left for everything else.
             </p>
           </div>
-          <span className="w-fit rounded-full bg-[#E8F3F0] px-3 py-2 text-[9px] text-[#04B89C]">
-            Updated today
-          </span>
-        </div>
-
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          {analytics.map((stat) => (
-            <div key={stat.label} className="rounded-[17px] border border-[#CADFD9] bg-[#F1F8F6] p-4">
-              <div
-                className="grid size-9 place-items-center rounded-full bg-white"
-                style={{ color: stat.accent }}
-              >
-                <UiIcon name={stat.icon} />
-              </div>
-              <p
-                className="mt-4 text-[26px] font-extrabold tracking-[-0.03em] [font-family:'Manrope:ExtraBold',sans-serif]"
-                style={{ color: stat.accent }}
-              >
-                {stat.value}
-              </p>
-              <p className="mt-1 text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{stat.label}</p>
-              <p className="mt-1.5 text-[10px] leading-relaxed text-[#557A73]">{stat.detail}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-5 rounded-[17px] bg-[#DBEBE7] p-4">
-          <p className="text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">Why this matters</p>
-          <p className="mt-2 text-[10px] leading-relaxed text-[#557A73]">
-            Grouping your feeds and messages means fewer apps to open and fewer interruptions pulling you back in — so you can stay in the loop and still post just as often, with more time left for everything else.
-          </p>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
@@ -1743,12 +1759,11 @@ function Navigation({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
     { id: "compose", label: "New Post", short: "+", icon: "plus", color: "#A7DED3", active: "#04B89C" },
     { id: "feeds", label: "Feeds", short: "F", icon: "feed", color: "#75CEBC", active: "#04B89C" },
     { id: "messages", label: "Messages", short: "M", icon: "message", color: "#A7DED3", active: "#1D8575" },
-    { id: "analytics", label: "Analytics", short: "A", icon: "trending", color: "#75CEBC", active: "#22524B" },
   ];
 
   return (
     <>
-      <nav className="fixed inset-x-3 bottom-3 z-40 grid h-[68px] grid-cols-4 gap-1 rounded-[22px] border border-[#B7D0CA] bg-white/95 p-1.5 shadow-[0_14px_38px_rgba(19,51,46,0.16)] backdrop-blur-xl md:hidden">
+      <nav className="fixed inset-x-3 bottom-3 z-40 grid h-[68px] grid-cols-3 gap-1 rounded-[22px] border border-[#B7D0CA] bg-white/95 p-1.5 shadow-[0_14px_38px_rgba(19,51,46,0.16)] backdrop-blur-xl md:hidden">
         {items.map((item) => (
           <button
             key={item.id}
@@ -1803,6 +1818,7 @@ export default function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [nightMode, setNightMode] = useState(
     () => typeof window !== "undefined" && window.localStorage.getItem("quietly-theme") === "dark",
@@ -1869,6 +1885,14 @@ export default function App() {
     );
   }
 
+  if (analyticsOpen) {
+    return (
+      <div className={nightMode ? "theme-dark" : ""}>
+        <AnalyticsView connected={connectedAccounts} onBack={() => setAnalyticsOpen(false)} />
+      </div>
+    );
+  }
+
   return (
     <div className={nightMode ? "theme-dark" : ""}>
       <div className="min-h-dvh bg-[#F1F8F6] text-[#0D2521] md:pl-[230px]">
@@ -1878,7 +1902,6 @@ export default function App() {
           {tab === "feeds" && <FeedView posts={posts} />}
           {tab === "compose" && <ComposeView onPublish={publish} />}
           {tab === "messages" && <MessagesView />}
-          {tab === "analytics" && <AnalyticsView connected={connectedAccounts} />}
         </main>
         <MenuDrawer
           open={menuOpen}
@@ -1895,6 +1918,10 @@ export default function App() {
           onDigest={() => {
             setMenuOpen(false);
             setSummaryOpen(true);
+          }}
+          onAnalytics={() => {
+            setMenuOpen(false);
+            setAnalyticsOpen(true);
           }}
         />
       </div>
