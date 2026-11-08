@@ -532,40 +532,108 @@ function CommentsSection({
 
 function AppHeader({
   tab,
-  onDigest,
-  onProfile,
-  onSettings,
+  onMenu,
 }: {
   tab: Tab;
-  onDigest: () => void;
-  onProfile: () => void;
-  onSettings: () => void;
+  onMenu: () => void;
 }) {
   const titles = { compose: "New Post", feeds: "Feeds", messages: "Messages" };
   return (
     <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-[#CADFD9] bg-[#F1F8F6]/95 px-5 backdrop-blur-xl md:px-8">
-      <button onClick={onProfile} className="size-9 overflow-hidden rounded-full border border-[#B7D0CA] bg-white transition hover:ring-2 hover:ring-[#04B89C]/30" aria-label="Open Ingrid Solheim’s profile">
+      <button onClick={onMenu} className="size-9 overflow-hidden rounded-full border border-[#B7D0CA] bg-white transition hover:ring-2 hover:ring-[#04B89C]/30" aria-label="Open menu">
         <img src="/assets/ingrid-profile.png" alt="" className="size-full object-cover" />
       </button>
       <h1 className="absolute left-1/2 -translate-x-1/2 text-[15px] tracking-[-0.01em]">{titles[tab]}</h1>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onSettings}
-          className="grid size-9 place-items-center rounded-full border border-[#B7D0CA] bg-white text-[#406761] transition hover:border-[#0D2521] hover:text-[#0D2521]"
-          aria-label="Open settings"
-        >
-          <UiIcon name="settings" />
-        </button>
-        <button
-          onClick={onDigest}
-          className="relative grid size-9 place-items-center rounded-full border border-[#B7D0CA] bg-white text-[11px] transition hover:border-[#0D2521]"
-          aria-label="Open notification summary"
-        >
-          3
-          <span className="absolute right-0 top-0 size-2 rounded-full bg-[#04B89C]" />
-        </button>
-      </div>
+      <button
+        onClick={onMenu}
+        className="relative grid size-9 place-items-center rounded-full border border-[#B7D0CA] bg-white text-[#406761] transition hover:border-[#0D2521] hover:text-[#0D2521]"
+        aria-label="Open menu"
+      >
+        <UiIcon name="menu" />
+        <span className="absolute right-0 top-0 size-2 rounded-full bg-[#04B89C]" />
+      </button>
     </header>
+  );
+}
+
+function MenuDrawer({
+  open,
+  onClose,
+  onProfile,
+  onSettings,
+  onDigest,
+  unreadCount,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onProfile: () => void;
+  onSettings: () => void;
+  onDigest: () => void;
+  unreadCount: number;
+}) {
+  const items: { label: string; detail: string; icon: UiIconName; onClick: () => void; badge?: number }[] = [
+    { label: "Profile", detail: "Connected accounts & analytics", icon: "user", onClick: onProfile },
+    { label: "Notifications", detail: "Your grouped summary", icon: "bell", onClick: onDigest, badge: unreadCount },
+    { label: "Settings", detail: "Appearance & preferences", icon: "settings", onClick: onSettings },
+  ];
+
+  return (
+    <>
+      <div
+        onClick={onClose}
+        aria-hidden="true"
+        className={`fixed inset-0 z-40 bg-[#0D2521]/50 backdrop-blur-sm transition-opacity duration-300 ${
+          open ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      />
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Account menu"
+        className={`fixed inset-y-0 right-0 z-50 flex w-full max-w-[340px] flex-col bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.3)] transition-transform duration-300 ease-out ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-[16px]">Menu</h2>
+          <button onClick={onClose} className="grid size-9 place-items-center rounded-full border border-[#B7D0CA] bg-white text-[#406761] transition hover:border-[#0D2521] hover:text-[#0D2521]" aria-label="Close menu">
+            <UiIcon name="close" />
+          </button>
+        </div>
+
+        <div className="mt-6 flex items-center gap-3 rounded-[17px] bg-[#F1F8F6] p-4">
+          <img src="/assets/ingrid-profile.png" alt="Ingrid Solheim" className="size-11 shrink-0 rounded-full object-cover" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">Ingrid Solheim</p>
+            <p className="mt-0.5 truncate text-[10px] text-[#557A73]">@ingridsol</p>
+          </div>
+        </div>
+
+        <nav className="mt-5 space-y-2">
+          {items.map((item) => (
+            <button
+              key={item.label}
+              onClick={item.onClick}
+              className="flex w-full items-center gap-3 rounded-[15px] border border-[#CADFD9] p-3 text-left transition hover:border-[#86A69F] hover:bg-[#F1F8F6]"
+            >
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#E8F3F0] text-[#1D8575]">
+                <UiIcon name={item.icon} className="size-[18px]" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{item.label}</p>
+                <p className="mt-0.5 truncate text-[10px] text-[#557A73]">{item.detail}</p>
+              </div>
+              {!!item.badge && (
+                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#04B89C] text-[9px] text-white">
+                  {item.badge}
+                </span>
+              )}
+              <UiIcon name="chevronRight" className="size-4 shrink-0 text-[#86A69F]" />
+            </button>
+          ))}
+        </nav>
+      </aside>
+    </>
   );
 }
 
@@ -1395,7 +1463,7 @@ function ComposeView({ onPublish }: { onPublish: (text: string, selected: Platfo
   );
 }
 
-type UiIconName = "search" | "more" | "compose" | "phone" | "video" | "info" | "attach" | "image" | "send" | "plus" | "feed" | "message" | "settings" | "clock" | "bell" | "trending";
+type UiIconName = "search" | "more" | "compose" | "phone" | "video" | "info" | "attach" | "image" | "send" | "plus" | "feed" | "message" | "settings" | "clock" | "bell" | "trending" | "menu" | "close" | "chevronRight" | "user";
 
 function UiIcon({ name, className = "size-4" }: { name: UiIconName; className?: string }) {
   return (
@@ -1416,6 +1484,10 @@ function UiIcon({ name, className = "size-4" }: { name: UiIconName; className?: 
       {name === "clock" && <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.5 2" /></>}
       {name === "bell" && <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></>}
       {name === "trending" && <><path d="m23 6-9.5 9.5-5-5L1 18" /><path d="M17 6h6v6" /></>}
+      {name === "menu" && <><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></>}
+      {name === "close" && <><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>}
+      {name === "chevronRight" && <path d="m9 18 6-6-6-6" />}
+      {name === "user" && <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" /></>}
     </svg>
   );
 }
@@ -1728,6 +1800,7 @@ export default function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [nightMode, setNightMode] = useState(
     () => typeof window !== "undefined" && window.localStorage.getItem("quietly-theme") === "dark",
   );
@@ -1798,16 +1871,28 @@ export default function App() {
       <div className="min-h-dvh bg-[#F1F8F6] text-[#0D2521] md:pl-[230px]">
         <Navigation tab={tab} setTab={setTab} />
         <main className="min-h-dvh pb-24 md:pb-0">
-          <AppHeader
-            tab={tab}
-            onDigest={() => setSummaryOpen(true)}
-            onProfile={() => setProfileOpen(true)}
-            onSettings={() => setSettingsOpen(true)}
-          />
+          <AppHeader tab={tab} onMenu={() => setMenuOpen(true)} />
           {tab === "feeds" && <FeedView posts={posts} />}
           {tab === "compose" && <ComposeView onPublish={publish} />}
           {tab === "messages" && <MessagesView />}
         </main>
+        <MenuDrawer
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          unreadCount={3}
+          onProfile={() => {
+            setMenuOpen(false);
+            setProfileOpen(true);
+          }}
+          onSettings={() => {
+            setMenuOpen(false);
+            setSettingsOpen(true);
+          }}
+          onDigest={() => {
+            setMenuOpen(false);
+            setSummaryOpen(true);
+          }}
+        />
       </div>
     </div>
   );
