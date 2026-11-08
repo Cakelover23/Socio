@@ -607,8 +607,6 @@ function MenuDrawer({
   onProfile,
   onSettings,
   onDigest,
-  onAnalytics,
-  onPeople,
   unreadCount,
 }: {
   open: boolean;
@@ -616,14 +614,10 @@ function MenuDrawer({
   onProfile: () => void;
   onSettings: () => void;
   onDigest: () => void;
-  onAnalytics: () => void;
-  onPeople: () => void;
   unreadCount: number;
 }) {
   const items: { label: string; detail: string; icon: UiIconName; onClick: () => void; badge?: number }[] = [
     { label: "Profile", detail: "Connected accounts & details", icon: "user", onClick: onProfile },
-    { label: "Close Circle", detail: "Combined updates for your people", icon: "people", onClick: onPeople },
-    { label: "Analytics", detail: "Time saved & digital wellbeing", icon: "trending", onClick: onAnalytics },
     { label: "Notifications", detail: "Your grouped summary", icon: "bell", onClick: onDigest, badge: unreadCount },
     { label: "Settings", detail: "Appearance & preferences", icon: "settings", onClick: onSettings },
   ];
@@ -1084,7 +1078,7 @@ function ProfileView({
   );
 }
 
-function AnalyticsView({ connected, onBack }: { connected: Platform[]; onBack: () => void }) {
+function AnalyticsSection({ connected }: { connected: Platform[] }) {
   const analytics = [
     {
       icon: "clock" as UiIconName,
@@ -1110,78 +1104,61 @@ function AnalyticsView({ connected, onBack }: { connected: Platform[]; onBack: (
   ];
 
   return (
-    <div className="min-h-dvh bg-[#1D8575] pb-10 [font-family:'Manrope:Medium',sans-serif]">
-      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
-        <button
-          onClick={onBack}
-          className="rounded-full border border-white/20 px-4 py-2 text-[11px] transition hover:bg-white/10"
-        >
-          <span aria-hidden="true">←</span> Back
-        </button>
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-[14px]">Analytics</h1>
-        <span className="rounded-full bg-white/10 px-4 py-2 text-[10px] text-white/75">Digital wellbeing</span>
-      </header>
-
-      <div className="mx-auto w-full max-w-[1120px] px-4 py-5 md:px-8 md:py-8">
-        <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
-          <div className="flex flex-col gap-3 border-b border-[#CADFD9] pb-6 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Digital wellbeing</p>
-              <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
-                Your analytics
-              </h2>
-              <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
-                A look at how staying connected through Quietly compares to checking every app on its own.
-              </p>
-            </div>
-            <span className="w-fit rounded-full bg-[#E8F3F0] px-3 py-2 text-[9px] text-[#04B89C]">
-              Updated today
-            </span>
-          </div>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            {analytics.map((stat) => (
-              <div key={stat.label} className="rounded-[17px] border border-[#CADFD9] bg-[#F1F8F6] p-4">
-                <div
-                  className="grid size-9 place-items-center rounded-full bg-white"
-                  style={{ color: stat.accent }}
-                >
-                  <UiIcon name={stat.icon} />
-                </div>
-                <p
-                  className="mt-4 text-[26px] font-extrabold tracking-[-0.03em] [font-family:'Manrope:ExtraBold',sans-serif]"
-                  style={{ color: stat.accent }}
-                >
-                  {stat.value}
-                </p>
-                <p className="mt-1 text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{stat.label}</p>
-                <p className="mt-1.5 text-[10px] leading-relaxed text-[#557A73]">{stat.detail}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-5 rounded-[17px] bg-[#DBEBE7] p-4">
-            <p className="text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">Why this matters</p>
-            <p className="mt-2 text-[10px] leading-relaxed text-[#557A73]">
-              Grouping your feeds and messages means fewer apps to open and fewer interruptions pulling you back in — so you can stay in the loop and still post just as often, with more time left for everything else.
-            </p>
-          </div>
-        </section>
+    <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+      <div className="flex flex-col gap-3 border-b border-[#CADFD9] pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Digital wellbeing</p>
+          <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
+            Your analytics
+          </h2>
+          <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
+            A look at how staying connected through Quietly compares to checking every app on its own.
+          </p>
+        </div>
+        <span className="w-fit rounded-full bg-[#E8F3F0] px-3 py-2 text-[9px] text-[#04B89C]">
+          Updated today
+        </span>
       </div>
-    </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        {analytics.map((stat) => (
+          <div key={stat.label} className="rounded-[17px] border border-[#CADFD9] bg-[#F1F8F6] p-4">
+            <div
+              className="grid size-9 place-items-center rounded-full bg-white"
+              style={{ color: stat.accent }}
+            >
+              <UiIcon name={stat.icon} />
+            </div>
+            <p
+              className="mt-4 text-[26px] font-extrabold tracking-[-0.03em] [font-family:'Manrope:ExtraBold',sans-serif]"
+              style={{ color: stat.accent }}
+            >
+              {stat.value}
+            </p>
+            <p className="mt-1 text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{stat.label}</p>
+            <p className="mt-1.5 text-[10px] leading-relaxed text-[#557A73]">{stat.detail}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5 rounded-[17px] bg-[#DBEBE7] p-4">
+        <p className="text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">Why this matters</p>
+        <p className="mt-2 text-[10px] leading-relaxed text-[#557A73]">
+          Grouping your feeds and messages means fewer apps to open and fewer interruptions pulling you back in — so you can stay in the loop and still post just as often, with more time left for everything else.
+        </p>
+      </div>
+    </section>
   );
 }
 
-function PeopleView({
+function CloseCircleSection({
   people,
   onAdd,
   onRemove,
-  onBack,
 }: {
   people: TrackedPerson[];
   onAdd: (person: TrackedPerson) => void;
   onRemove: (id: number) => void;
-  onBack: () => void;
 }) {
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
@@ -1232,35 +1209,27 @@ function PeopleView({
   };
 
   return (
-    <div className="min-h-dvh bg-[#1D8575] pb-10 [font-family:'Manrope:Medium',sans-serif]">
-      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
-        <button onClick={onBack} className="rounded-full border border-white/20 px-4 py-2 text-[11px] transition hover:bg-white/10">
-          <span aria-hidden="true">←</span> Back
-        </button>
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-[14px]">Close Circle</h1>
-        <span className="rounded-full bg-white/10 px-4 py-2 text-[10px] text-white/75">{people.length} tracked</span>
-      </header>
+    <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_340px]">
+      <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+        <div className="border-b border-[#CADFD9] pb-6">
+          <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Stay close to the people who matter</p>
+          <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
+            Your close circle
+          </h2>
+          <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
+            Link someone's accounts across platforms as one person to get a combined update instead of checking each app.
+          </p>
+        </div>
 
-      <div className="mx-auto grid w-full max-w-[1120px] gap-5 px-4 py-5 md:grid-cols-[minmax(0,1fr)_340px] md:px-8 md:py-8">
-        <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
-          <div className="border-b border-[#CADFD9] pb-6">
-            <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Stay close to the people who matter</p>
-            <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
-              Your close circle
-            </h2>
-            <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
-              Link someone's accounts across platforms as one person to get a combined update instead of checking each app.
+        <div className="mt-5 space-y-3">
+          {people.length === 0 && (
+            <p className="rounded-[17px] border border-dashed border-[#CADFD9] p-5 text-center text-[11px] text-[#86A69F]">
+              You haven't added anyone yet — add someone from the suggestions or the form on the right.
             </p>
-          </div>
-
-          <div className="mt-5 space-y-3">
-            {people.length === 0 && (
-              <p className="rounded-[17px] border border-dashed border-[#CADFD9] p-5 text-center text-[11px] text-[#86A69F]">
-                You haven't added anyone yet — add someone from the suggestions or the form on the right.
-              </p>
-            )}
-            {people.map((person) => (
-              <article key={person.id} className="flex items-start gap-3 rounded-[18px] border border-[#CADFD9] bg-[#F1F8F6] p-4">
+          )}
+          {people.map((person) => (
+            <article key={person.id} className="rounded-[18px] border border-[#CADFD9] bg-[#F1F8F6] p-4">
+              <div className="flex items-start gap-3">
                 {person.avatar ? (
                   <img src={person.avatar} alt="" className="size-11 shrink-0 rounded-full object-cover" />
                 ) : (
@@ -1288,91 +1257,94 @@ function PeopleView({
                     ))}
                   </div>
                 </div>
-              </article>
-            ))}
-          </div>
-
-          {suggestions.length > 0 && (
-            <div className="mt-6 border-t border-[#CADFD9] pt-5">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[#86A69F]">Suggested from your accounts</p>
-              <div className="mt-3 space-y-2">
-                {suggestions.map((contact) => (
-                  <div key={contact.name} className="flex items-center gap-3 rounded-[15px] border border-[#CADFD9] p-3">
-                    <img src={contact.avatar} alt="" className="size-9 shrink-0 rounded-full object-cover" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{contact.name}</p>
-                      <p className="mt-0.5 text-[10px] text-[#6D8F88]">Seen on {contact.platforms.length} platforms</p>
-                    </div>
-                    <button
-                      onClick={() => addSuggestion(contact)}
-                      className="shrink-0 rounded-full bg-[#04B89C] px-3 py-2 text-[9px] text-white transition hover:bg-[#1D8575]"
-                    >
-                      Add
-                    </button>
-                  </div>
-                ))}
               </div>
-            </div>
-          )}
-        </section>
+              <p className="mt-3 text-[11px] leading-relaxed text-[#557A73]">
+                {PERSON_SUMMARIES[person.name] ?? "No linked platform activity yet — updates will appear here once they post."}
+              </p>
+            </article>
+          ))}
+        </div>
 
-        <aside className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
-          <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Add someone manually</p>
-          <h3 className="mt-2 text-[16px] text-[#1D8575]">Link their accounts</h3>
-
-          <label className="mt-4 block text-[10px] text-[#557A73]">
-            Name
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="e.g. Taylor Nguyen"
-              className="mt-1.5 w-full rounded-[12px] bg-[#F1F8F6] px-3 py-2.5 text-[12px] outline-none focus:ring-1 focus:ring-[#86A69F]"
-            />
-          </label>
-
-          <label className="mt-3 block text-[10px] text-[#557A73]">
-            Label (optional)
-            <input
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder="e.g. Close friend, Sister, Coworker"
-              className="mt-1.5 w-full rounded-[12px] bg-[#F1F8F6] px-3 py-2.5 text-[12px] outline-none focus:ring-1 focus:ring-[#86A69F]"
-            />
-          </label>
-
-          <p className="mt-4 text-[10px] text-[#557A73]">Which accounts are theirs?</p>
-          <div className="mt-2 space-y-2">
-            {platforms.map((platform) => {
-              const linked = platform.name in draftAccounts;
-              return (
-                <div key={platform.name} className={`rounded-[12px] border p-2.5 transition ${linked ? "border-[#1D8575] bg-[#F1F8F6]" : "border-[#CADFD9]"}`}>
-                  <button onClick={() => togglePlatform(platform.name)} className="flex w-full items-center gap-2 text-left">
-                    <PlatformMark name={platform.name} small />
-                    <span className="flex-1 text-[11px] text-[#22524B]">{platform.name}</span>
-                    <span className={`size-4 rounded-full border ${linked ? "border-[#1D8575] bg-[#1D8575]" : "border-[#B7D0CA]"}`} />
+        {suggestions.length > 0 && (
+          <div className="mt-6 border-t border-[#CADFD9] pt-5">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#86A69F]">Suggested from your accounts</p>
+            <div className="mt-3 space-y-2">
+              {suggestions.map((contact) => (
+                <div key={contact.name} className="flex items-center gap-3 rounded-[15px] border border-[#CADFD9] p-3">
+                  <img src={contact.avatar} alt="" className="size-9 shrink-0 rounded-full object-cover" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{contact.name}</p>
+                    <p className="mt-0.5 text-[10px] text-[#6D8F88]">Seen on {contact.platforms.length} platforms</p>
+                  </div>
+                  <button
+                    onClick={() => addSuggestion(contact)}
+                    className="shrink-0 rounded-full bg-[#04B89C] px-3 py-2 text-[9px] text-white transition hover:bg-[#1D8575]"
+                  >
+                    Add
                   </button>
-                  {linked && (
-                    <input
-                      value={draftAccounts[platform.name] ?? ""}
-                      onChange={(event) => setHandle(platform.name, event.target.value)}
-                      placeholder="@handle or display name"
-                      className="mt-2 w-full rounded-[10px] bg-white px-3 py-2 text-[11px] outline-none focus:ring-1 focus:ring-[#86A69F]"
-                    />
-                  )}
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
+        )}
+      </section>
 
-          <button
-            disabled={!name.trim() || Object.keys(draftAccounts).length === 0}
-            onClick={addFromForm}
-            className="mt-5 w-full rounded-[12px] bg-[#04B89C] px-4 py-3 text-[11px] text-white transition hover:bg-[#1D8575] disabled:cursor-not-allowed disabled:opacity-35"
-          >
-            Add to close circle
-          </button>
-        </aside>
-      </div>
+      <aside className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+        <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Add someone manually</p>
+        <h3 className="mt-2 text-[16px] text-[#1D8575]">Link their accounts</h3>
+
+        <label className="mt-4 block text-[10px] text-[#557A73]">
+          Name
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="e.g. Taylor Nguyen"
+            className="mt-1.5 w-full rounded-[12px] bg-[#F1F8F6] px-3 py-2.5 text-[12px] outline-none focus:ring-1 focus:ring-[#86A69F]"
+          />
+        </label>
+
+        <label className="mt-3 block text-[10px] text-[#557A73]">
+          Label (optional)
+          <input
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder="e.g. Close friend, Sister, Coworker"
+            className="mt-1.5 w-full rounded-[12px] bg-[#F1F8F6] px-3 py-2.5 text-[12px] outline-none focus:ring-1 focus:ring-[#86A69F]"
+          />
+        </label>
+
+        <p className="mt-4 text-[10px] text-[#557A73]">Which accounts are theirs?</p>
+        <div className="mt-2 space-y-2">
+          {platforms.map((platform) => {
+            const linked = platform.name in draftAccounts;
+            return (
+              <div key={platform.name} className={`rounded-[12px] border p-2.5 transition ${linked ? "border-[#1D8575] bg-[#F1F8F6]" : "border-[#CADFD9]"}`}>
+                <button onClick={() => togglePlatform(platform.name)} className="flex w-full items-center gap-2 text-left">
+                  <PlatformMark name={platform.name} small />
+                  <span className="flex-1 text-[11px] text-[#22524B]">{platform.name}</span>
+                  <span className={`size-4 rounded-full border ${linked ? "border-[#1D8575] bg-[#1D8575]" : "border-[#B7D0CA]"}`} />
+                </button>
+                {linked && (
+                  <input
+                    value={draftAccounts[platform.name] ?? ""}
+                    onChange={(event) => setHandle(platform.name, event.target.value)}
+                    placeholder="@handle or display name"
+                    className="mt-2 w-full rounded-[10px] bg-white px-3 py-2 text-[11px] outline-none focus:ring-1 focus:ring-[#86A69F]"
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <button
+          disabled={!name.trim() || Object.keys(draftAccounts).length === 0}
+          onClick={addFromForm}
+          className="mt-5 w-full rounded-[12px] bg-[#04B89C] px-4 py-3 text-[11px] text-white transition hover:bg-[#1D8575] disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          Add to close circle
+        </button>
+      </aside>
     </div>
   );
 }
@@ -1501,7 +1473,18 @@ function SummaryView({ onBack }: { onBack: () => void }) {
   );
 }
 
-function AiSummaryView({ connected, people }: { connected: Platform[]; people: TrackedPerson[] }) {
+function AiSummaryView({
+  connected,
+  people,
+  onAddPerson,
+  onRemovePerson,
+}: {
+  connected: Platform[];
+  people: TrackedPerson[];
+  onAddPerson: (person: TrackedPerson) => void;
+  onRemovePerson: (id: number) => void;
+}) {
+  const [section, setSection] = useState<"insights" | "circle" | "analytics">("insights");
   const platformSummaries: Record<Platform, { headline: string; summary: string; sentiment: string; topTopic: string; stat: string }> = {
     Instagram: {
       headline: "Mostly catching up with Jordan and weekend plans",
@@ -1540,104 +1523,94 @@ function AiSummaryView({ connected, people }: { connected: Platform[]; people: T
     },
   };
 
+  const sections: { id: typeof section; label: string; icon: UiIconName; badge?: number }[] = [
+    { id: "insights", label: "Insights", icon: "sparkle" },
+    { id: "circle", label: "Close Circle", icon: "people", badge: people.length || undefined },
+    { id: "analytics", label: "Analytics", icon: "trending" },
+  ];
+
   return (
     <div className="mx-auto w-full max-w-[900px] px-4 py-5 md:px-8 md:py-8">
-      {people.length > 0 && (
-        <section className="mb-5 rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+      <div className="no-scrollbar mb-5 flex gap-2 overflow-x-auto">
+        {sections.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setSection(item.id)}
+            aria-pressed={section === item.id}
+            className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-xs transition ${
+              section === item.id
+                ? "border-[#1D8575] bg-[#1D8575] text-white"
+                : "border-[#CADFD9] bg-white text-[#13332E] hover:border-[#1D8575]"
+            }`}
+          >
+            <UiIcon name={item.icon} className="size-4" />
+            {item.label}
+            {!!item.badge && (
+              <span className="grid size-5 place-items-center rounded-full bg-white/25 text-[10px]">{item.badge}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {section === "insights" && (
+        <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
           <div className="flex flex-col gap-3 border-b border-[#CADFD9] pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Close circle</p>
+              <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">AI insights</p>
               <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
-                What they've been up to
+                A summary for each account
               </h2>
               <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
-                Combined updates for the people you've linked across platforms.
+                Quietly reads what changed on each platform so you can catch up in seconds, not scroll for minutes.
               </p>
             </div>
+            <span className="w-fit rounded-full bg-[#E8F3F0] px-3 py-2 text-[9px] text-[#04B89C]">
+              Generated now
+            </span>
           </div>
 
           <div className="mt-5 space-y-3">
-            {people.map((person) => (
-              <article key={person.id} className="rounded-[18px] border border-[#CADFD9] bg-[#F1F8F6] p-4">
-                <div className="flex items-center gap-3">
-                  {person.avatar ? (
-                    <img src={person.avatar} alt="" className="size-10 shrink-0 rounded-full object-cover" />
-                  ) : (
-                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#DBEBE7] text-[10px] text-[#1D8575]">
-                      {person.name.split(" ").map((part) => part[0]).join("").slice(0, 2)}
-                    </span>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{person.name}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      {person.accounts.map((account) => (
-                        <PlatformMark key={account.platform} name={account.platform} small />
-                      ))}
+            {platforms.map((platform) => {
+              const summary = platformSummaries[platform.name];
+              const isConnected = connected.includes(platform.name);
+              return (
+                <article
+                  key={platform.name}
+                  className={`rounded-[18px] border p-4 transition ${
+                    isConnected ? "border-[#CADFD9] bg-[#F1F8F6]" : "border-dashed border-[#CADFD9] bg-white opacity-70"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <PlatformMark name={platform.name} />
+                      <div>
+                        <p className="text-[13px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{platform.name}</p>
+                        <p className="mt-0.5 text-[10px] text-[#6D8F88]">{summary.stat}</p>
+                      </div>
                     </div>
+                    <span className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[9px] text-[#557A73]">{summary.sentiment}</span>
                   </div>
-                </div>
-                <p className="mt-3 text-[11px] leading-relaxed text-[#557A73]">
-                  {PERSON_SUMMARIES[person.name] ?? "No linked platform activity yet — updates will appear here once they post."}
-                </p>
-              </article>
-            ))}
+                  {isConnected ? (
+                    <>
+                      <h3 className="mt-3 text-[13px] font-semibold text-[#13332E]">{summary.headline}</h3>
+                      <p className="mt-2 text-[11px] leading-relaxed text-[#557A73]">{summary.summary}</p>
+                      <span className="mt-3 inline-block rounded-full bg-[#DBEBE7] px-3 py-1.5 text-[9px] text-[#1D8575]">
+                        Top topic: {summary.topTopic}
+                      </span>
+                    </>
+                  ) : (
+                    <p className="mt-3 text-[11px] leading-relaxed text-[#86A69F]">Connect this account in your profile to get an AI summary.</p>
+                  )}
+                </article>
+              );
+            })}
           </div>
         </section>
       )}
 
-      <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
-        <div className="flex flex-col gap-3 border-b border-[#CADFD9] pb-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">AI insights</p>
-            <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
-              A summary for each account
-            </h2>
-            <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
-              Quietly reads what changed on each platform so you can catch up in seconds, not scroll for minutes.
-            </p>
-          </div>
-          <span className="w-fit rounded-full bg-[#E8F3F0] px-3 py-2 text-[9px] text-[#04B89C]">
-            Generated now
-          </span>
-        </div>
+      {section === "circle" && <CloseCircleSection people={people} onAdd={onAddPerson} onRemove={onRemovePerson} />}
 
-        <div className="mt-5 space-y-3">
-          {platforms.map((platform) => {
-            const summary = platformSummaries[platform.name];
-            const isConnected = connected.includes(platform.name);
-            return (
-              <article
-                key={platform.name}
-                className={`rounded-[18px] border p-4 transition ${
-                  isConnected ? "border-[#CADFD9] bg-[#F1F8F6]" : "border-dashed border-[#CADFD9] bg-white opacity-70"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <PlatformMark name={platform.name} />
-                    <div>
-                      <p className="text-[13px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{platform.name}</p>
-                      <p className="mt-0.5 text-[10px] text-[#6D8F88]">{summary.stat}</p>
-                    </div>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[9px] text-[#557A73]">{summary.sentiment}</span>
-                </div>
-                {isConnected ? (
-                  <>
-                    <h3 className="mt-3 text-[13px] font-semibold text-[#13332E]">{summary.headline}</h3>
-                    <p className="mt-2 text-[11px] leading-relaxed text-[#557A73]">{summary.summary}</p>
-                    <span className="mt-3 inline-block rounded-full bg-[#DBEBE7] px-3 py-1.5 text-[9px] text-[#1D8575]">
-                      Top topic: {summary.topTopic}
-                    </span>
-                  </>
-                ) : (
-                  <p className="mt-3 text-[11px] leading-relaxed text-[#86A69F]">Connect this account in your profile to get an AI summary.</p>
-                )}
-              </article>
-            );
-          })}
-        </div>
-      </section>
+      {section === "analytics" && <AnalyticsSection connected={connected} />}
     </div>
   );
 }
@@ -2197,30 +2170,48 @@ function MessagesView() {
 function Navigation({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
   const items: { id: Tab; label: string; short: string; icon: UiIconName; color: string; active: string }[] = [
     { id: "feeds", label: "Feeds", short: "F", icon: "feed", color: "#75CEBC", active: "#04B89C" },
-    { id: "messages", label: "Messages", short: "M", icon: "message", color: "#A7DED3", active: "#1D8575" },
     { id: "ai", label: "AI", short: "AI", icon: "sparkle", color: "#A7DED3", active: "#22524B" },
+    { id: "messages", label: "Messages", short: "M", icon: "message", color: "#A7DED3", active: "#1D8575" },
   ];
 
   return (
     <>
-      <nav className="fixed inset-x-3 bottom-3 z-40 grid h-[68px] grid-cols-3 gap-1 rounded-[22px] border border-[#B7D0CA] bg-white/95 p-1.5 shadow-[0_14px_38px_rgba(19,51,46,0.16)] backdrop-blur-xl md:hidden">
-        {items.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setTab(item.id)}
-            aria-current={tab === item.id ? "page" : undefined}
-            className={`flex flex-col items-center justify-center gap-1 rounded-[17px] text-[9px] transition ${
-              tab === item.id
-                ? "bg-[#1D8575] text-white shadow-[0_6px_15px_rgba(19,51,46,0.2)]"
-                : "text-[#557A73] hover:bg-[#DBEBE7] hover:text-[#1D8575]"
-            }`}
-          >
-            <span className={`grid size-6 place-items-center rounded-full ${tab === item.id ? "text-white" : "text-[#557A73]"}`}>
-              <UiIcon name={item.icon} className="size-[17px]" />
-            </span>
-            <span>{item.label}</span>
-          </button>
-        ))}
+      <nav className="fixed inset-x-3 bottom-3 z-40 grid h-[68px] grid-cols-3 items-center gap-1 rounded-[22px] border border-[#B7D0CA] bg-white/95 p-1.5 shadow-[0_14px_38px_rgba(19,51,46,0.16)] backdrop-blur-xl md:hidden">
+        {items.map((item) =>
+          item.id === "ai" ? (
+            <button
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              aria-current={tab === item.id ? "page" : undefined}
+              className="relative flex h-full flex-col items-center justify-end gap-1 text-[9px]"
+            >
+              <span
+                className={`absolute -top-6 grid size-[58px] place-items-center rounded-full border-[5px] border-[#F1F8F6] shadow-[0_12px_26px_rgba(4,184,156,0.45)] transition ${
+                  tab === item.id ? "scale-105 bg-[#04B89C] text-white" : "bg-[#1D8575] text-white"
+                }`}
+              >
+                <UiIcon name={item.icon} className="size-6" />
+              </span>
+              <span className={`mt-10 ${tab === item.id ? "text-[#1D8575]" : "text-[#557A73]"}`}>{item.label}</span>
+            </button>
+          ) : (
+            <button
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              aria-current={tab === item.id ? "page" : undefined}
+              className={`flex flex-col items-center justify-center gap-1 rounded-[17px] py-2 text-[9px] transition ${
+                tab === item.id
+                  ? "bg-[#1D8575] text-white shadow-[0_6px_15px_rgba(19,51,46,0.2)]"
+                  : "text-[#557A73] hover:bg-[#DBEBE7] hover:text-[#1D8575]"
+              }`}
+            >
+              <span className={`grid size-6 place-items-center rounded-full ${tab === item.id ? "text-white" : "text-[#557A73]"}`}>
+                <UiIcon name={item.icon} className="size-[17px]" />
+              </span>
+              <span>{item.label}</span>
+            </button>
+          ),
+        )}
       </nav>
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[230px] flex-col border-r border-[#CADFD9] bg-[#F1F8F6] p-5 md:flex">
         <div className="flex items-center gap-3 px-2 py-3">
@@ -2258,8 +2249,6 @@ export default function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [analyticsOpen, setAnalyticsOpen] = useState(false);
-  const [peopleOpen, setPeopleOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [nightMode, setNightMode] = useState(
     () => typeof window !== "undefined" && window.localStorage.getItem("quietly-theme") === "dark",
@@ -2335,27 +2324,6 @@ export default function App() {
     );
   }
 
-  if (analyticsOpen) {
-    return (
-      <div className={nightMode ? "theme-dark" : ""}>
-        <AnalyticsView connected={connectedAccounts} onBack={() => setAnalyticsOpen(false)} />
-      </div>
-    );
-  }
-
-  if (peopleOpen) {
-    return (
-      <div className={nightMode ? "theme-dark" : ""}>
-        <PeopleView
-          people={trackedPeople}
-          onAdd={addTrackedPerson}
-          onRemove={removeTrackedPerson}
-          onBack={() => setPeopleOpen(false)}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className={nightMode ? "theme-dark" : ""}>
       <div className="min-h-dvh bg-[#F1F8F6] text-[#0D2521] md:pl-[230px]">
@@ -2365,7 +2333,14 @@ export default function App() {
           {tab === "feeds" && <FeedView posts={posts} onCompose={() => setTab("compose")} />}
           {tab === "compose" && <ComposeView onPublish={publish} onCancel={() => setTab("feeds")} />}
           {tab === "messages" && <MessagesView />}
-          {tab === "ai" && <AiSummaryView connected={connectedAccounts} people={trackedPeople} />}
+          {tab === "ai" && (
+            <AiSummaryView
+              connected={connectedAccounts}
+              people={trackedPeople}
+              onAddPerson={addTrackedPerson}
+              onRemovePerson={removeTrackedPerson}
+            />
+          )}
         </main>
         <MenuDrawer
           open={menuOpen}
@@ -2382,14 +2357,6 @@ export default function App() {
           onDigest={() => {
             setMenuOpen(false);
             setSummaryOpen(true);
-          }}
-          onAnalytics={() => {
-            setMenuOpen(false);
-            setAnalyticsOpen(true);
-          }}
-          onPeople={() => {
-            setMenuOpen(false);
-            setPeopleOpen(true);
           }}
         />
       </div>
