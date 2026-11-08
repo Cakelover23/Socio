@@ -581,13 +581,16 @@ function CommentsSection({
 function AppHeader({
   tab,
   onMenu,
+  filtersSlot,
 }: {
   tab: Tab;
   onMenu: () => void;
+  filtersSlot?: React.ReactNode;
 }) {
   const titles: Record<Tab, string> = { compose: "New Post", feeds: "Feeds", messages: "Messages", ai: "AI Insights" };
   return (
-    <header className="sticky top-0 z-30 flex h-[72px] items-center justify-end border-b border-[#CADFD9] bg-[#F1F8F6]/95 px-5 backdrop-blur-xl md:px-8">
+    <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-[#CADFD9] bg-[#F1F8F6]/95 px-5 backdrop-blur-xl md:px-8">
+      <div className="flex items-center">{filtersSlot}</div>
       <h1 className="absolute left-1/2 -translate-x-1/2 text-[15px] tracking-[-0.01em]">{titles[tab]}</h1>
       <button
         onClick={onMenu}
@@ -598,6 +601,57 @@ function AppHeader({
         <span className="absolute right-0 top-0 size-2 rounded-full bg-[#04B89C]" />
       </button>
     </header>
+  );
+}
+
+function FeedFilters({
+  selectedPlatforms,
+  onToggle,
+}: {
+  selectedPlatforms: Platform[];
+  onToggle: (platform: Platform | "All") => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        className={`flex items-center gap-2 rounded-full border px-3.5 py-2 text-[11px] transition ${
+          selectedPlatforms.length > 0
+            ? "border-[#1D8575] bg-[#1D8575] text-white"
+            : "border-[#CADFD9] bg-white text-[#13332E] hover:border-[#1D8575]"
+        }`}
+      >
+        <UiIcon name="filter" className="size-4" />
+        Filters
+        {selectedPlatforms.length > 0 && (
+          <span className="grid size-5 place-items-center rounded-full bg-white/25 text-[10px]">{selectedPlatforms.length}</span>
+        )}
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} aria-hidden="true" />
+          <div className="absolute left-0 top-full z-20 mt-2 w-[min(320px,calc(100vw-2rem))] rounded-[18px] border border-[#CADFD9] bg-white p-3 shadow-[0_18px_40px_rgba(19,51,46,0.15)]">
+            <p className="px-2 pb-2 text-[10px] uppercase tracking-[0.16em] text-[#6D8F88]">Show posts from</p>
+            <div className="flex flex-wrap gap-2 px-1">
+              {["All", ...platforms.map((item) => item.name)].map((item) => (
+                <button
+                  key={item}
+                  onClick={() => onToggle(item as Platform | "All")}
+                  data-platform={item}
+                  data-active={item === "All" ? selectedPlatforms.length === 0 : selectedPlatforms.includes(item as Platform)}
+                  aria-pressed={item === "All" ? selectedPlatforms.length === 0 : selectedPlatforms.includes(item as Platform)}
+                  className="platform-filter shrink-0 rounded-full border px-4 py-2 text-xs transition"
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -1615,28 +1669,22 @@ function AiSummaryView({
   );
 }
 
-function FeedView({ posts, onCompose }: { posts: typeof initialPosts; onCompose: () => void }) {
-  const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([]);
+function FeedView({
+  posts,
+  onCompose,
+  selectedPlatforms,
+}: {
+  posts: typeof initialPosts;
+  onCompose: () => void;
+  selectedPlatforms: Platform[];
+}) {
   const [liked, setLiked] = useState<number[]>([]);
   const [openComments, setOpenComments] = useState<number | null>(null);
   const [commentAdditions, setCommentAdditions] = useState<Record<number, number>>({});
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const filteredPosts =
     selectedPlatforms.length === 0
       ? posts
       : posts.filter((post) => selectedPlatforms.includes(post.platform));
-
-  const togglePlatformFilter = (platform: Platform | "All") => {
-    if (platform === "All") {
-      setSelectedPlatforms([]);
-      return;
-    }
-    setSelectedPlatforms(
-      selectedPlatforms.includes(platform)
-        ? selectedPlatforms.filter((item) => item !== platform)
-        : [...selectedPlatforms, platform],
-    );
-  };
 
   return (
     <div className="feed-depth-background min-h-[calc(100dvh-72px)] w-full">
@@ -1648,47 +1696,6 @@ function FeedView({ posts, onCompose }: { posts: typeof initialPosts; onCompose:
         <UiIcon name="plus" className="size-4" />
         New post
       </button>
-      <div className="sticky top-[72px] z-20 border-b border-[#CADFD9] bg-[#F1F8F6]/95 backdrop-blur-xl">
-        <div className="relative mx-auto w-full max-w-[760px] px-4 py-3 md:px-8">
-          <button
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            aria-expanded={filtersOpen}
-            className={`flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs transition ${
-              selectedPlatforms.length > 0
-                ? "border-[#1D8575] bg-[#1D8575] text-white"
-                : "border-[#CADFD9] bg-white text-[#13332E] hover:border-[#1D8575]"
-            }`}
-          >
-            <UiIcon name="filter" className="size-4" />
-            Filters
-            {selectedPlatforms.length > 0 && (
-              <span className="grid size-5 place-items-center rounded-full bg-white/25 text-[10px]">{selectedPlatforms.length}</span>
-            )}
-          </button>
-          {filtersOpen && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setFiltersOpen(false)} aria-hidden="true" />
-              <div className="absolute left-4 top-full z-20 mt-2 w-[min(320px,calc(100vw-2rem))] rounded-[18px] border border-[#CADFD9] bg-white p-3 shadow-[0_18px_40px_rgba(19,51,46,0.15)] md:left-8">
-                <p className="px-2 pb-2 text-[10px] uppercase tracking-[0.16em] text-[#6D8F88]">Show posts from</p>
-                <div className="flex flex-wrap gap-2 px-1">
-                  {["All", ...platforms.map((item) => item.name)].map((item) => (
-                    <button
-                      key={item}
-                      onClick={() => togglePlatformFilter(item as Platform | "All")}
-                      data-platform={item}
-                      data-active={item === "All" ? selectedPlatforms.length === 0 : selectedPlatforms.includes(item as Platform)}
-                      aria-pressed={item === "All" ? selectedPlatforms.length === 0 : selectedPlatforms.includes(item as Platform)}
-                      className="platform-filter shrink-0 rounded-full border px-4 py-2 text-xs transition"
-                    >
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
 
       <div className="mx-auto w-full max-w-[760px] space-y-3 px-4 py-5 md:px-8 md:py-8">
         {filteredPosts.map((post) => {
@@ -2255,6 +2262,7 @@ export default function App() {
   );
   const [connectedAccounts, setConnectedAccounts] = useState<Platform[]>(["Instagram", "LinkedIn"]);
   const [trackedPeople, setTrackedPeople] = useState<TrackedPerson[]>(initialTrackedPeople);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([]);
 
   const publish = (text: string, selected: Platform[]) => {
     const platform = platforms.find((item) => item.name === selected[0]) ?? platforms[0];
@@ -2284,6 +2292,18 @@ export default function App() {
       connectedAccounts.includes(platform)
         ? connectedAccounts.filter((item) => item !== platform)
         : [...connectedAccounts, platform],
+    );
+  };
+
+  const togglePlatformFilter = (platform: Platform | "All") => {
+    if (platform === "All") {
+      setSelectedPlatforms([]);
+      return;
+    }
+    setSelectedPlatforms(
+      selectedPlatforms.includes(platform)
+        ? selectedPlatforms.filter((item) => item !== platform)
+        : [...selectedPlatforms, platform],
     );
   };
 
@@ -2329,8 +2349,18 @@ export default function App() {
       <div className="min-h-dvh bg-[#F1F8F6] text-[#0D2521] md:pl-[230px]">
         <Navigation tab={tab} setTab={setTab} />
         <main className="min-h-dvh pb-24 md:pb-0">
-          <AppHeader tab={tab} onMenu={() => setMenuOpen(true)} />
-          {tab === "feeds" && <FeedView posts={posts} onCompose={() => setTab("compose")} />}
+          <AppHeader
+            tab={tab}
+            onMenu={() => setMenuOpen(true)}
+            filtersSlot={
+              tab === "feeds" ? (
+                <FeedFilters selectedPlatforms={selectedPlatforms} onToggle={togglePlatformFilter} />
+              ) : undefined
+            }
+          />
+          {tab === "feeds" && (
+            <FeedView posts={posts} onCompose={() => setTab("compose")} selectedPlatforms={selectedPlatforms} />
+          )}
           {tab === "compose" && <ComposeView onPublish={publish} onCancel={() => setTab("feeds")} />}
           {tab === "messages" && <MessagesView />}
           {tab === "ai" && (
