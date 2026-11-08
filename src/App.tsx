@@ -2190,7 +2190,7 @@ function Navigation({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
               key={item.id}
               onClick={() => setTab(item.id)}
               aria-current={tab === item.id ? "page" : undefined}
-              className="relative flex flex-col items-center justify-end pb-1"
+              className="relative flex h-full items-center justify-center"
             >
               <span
                 className={`absolute -top-4 grid size-11 place-items-center rounded-full border-[3px] border-[#F1F8F6] shadow-[0_8px_18px_rgba(4,184,156,0.4)] transition ${
@@ -2199,7 +2199,7 @@ function Navigation({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
               >
                 <UiIcon name={item.icon} className="size-5" />
               </span>
-              <span className={`mt-7 text-[9px] leading-none ${tab === item.id ? "text-[#1D8575]" : "text-[#557A73]"}`}>{item.label}</span>
+              <span className="sr-only">{item.label}</span>
             </button>
           ) : (
             <button
