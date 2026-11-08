@@ -2190,10 +2190,10 @@ function Navigation({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
               key={item.id}
               onClick={() => setTab(item.id)}
               aria-current={tab === item.id ? "page" : undefined}
-              className="relative flex h-full items-center justify-center"
+              className="flex h-full items-center justify-center"
             >
               <span
-                className={`absolute -top-4 grid size-11 place-items-center rounded-full border-[3px] border-[#F1F8F6] shadow-[0_8px_18px_rgba(4,184,156,0.4)] transition ${
+                className={`grid size-11 place-items-center rounded-full border-[3px] border-[#F1F8F6] shadow-[0_8px_18px_rgba(4,184,156,0.4)] transition ${
                   tab === item.id ? "scale-105 bg-[#04B89C] text-white" : "bg-[#1D8575] text-white"
                 }`}
               >
