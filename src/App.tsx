@@ -335,6 +335,54 @@ const conversations = [
   },
 ];
 
+type TrackedPerson = {
+  id: number;
+  name: string;
+  avatar?: string;
+  note?: string;
+  accounts: { platform: Platform; handle: string }[];
+};
+
+const knownContacts: { name: string; avatar: string; platforms: Platform[] }[] = (() => {
+  const map = new Map<string, { avatar: string; platforms: Set<Platform> }>();
+  const add = (name: string, platform: Platform, avatar: string) => {
+    if (name === "You") return;
+    const entry = map.get(name) ?? { avatar, platforms: new Set<Platform>() };
+    entry.platforms.add(platform);
+    map.set(name, entry);
+  };
+  initialPosts.forEach((post) => add(post.author, post.platform, post.avatar));
+  conversations.forEach((conversation) => {
+    if (conversation.group) return;
+    add(conversation.name, conversation.platform as Platform, conversation.avatar);
+    conversation.otherThreads.forEach((thread) => add(conversation.name, thread.platform as Platform, conversation.avatar));
+  });
+  return Array.from(map.entries()).map(([name, { avatar, platforms }]) => ({
+    name,
+    avatar,
+    platforms: Array.from(platforms),
+  }));
+})();
+
+const initialTrackedPeople: TrackedPerson[] = [
+  {
+    id: 1,
+    name: "Jordan Lee",
+    avatar: "/assets/jordan-profile.jpg",
+    note: "College friend",
+    accounts: [
+      { platform: "Instagram", handle: "@jordanlee" },
+      { platform: "Facebook", handle: "Jordan Lee" },
+      { platform: "LinkedIn", handle: "Jordan Lee" },
+      { platform: "Discord", handle: "jordan.lee" },
+    ],
+  },
+];
+
+const PERSON_SUMMARIES: Record<string, string> = {
+  "Jordan Lee": "Confirmed Thursday plans on Instagram, posted in #book-club on Discord, added event details on Facebook, and asked for a quick call on LinkedIn — all within the last day.",
+};
+
 type FeedComment = {
   id: number;
   author: string;
@@ -560,6 +608,7 @@ function MenuDrawer({
   onSettings,
   onDigest,
   onAnalytics,
+  onPeople,
   unreadCount,
 }: {
   open: boolean;
@@ -568,10 +617,12 @@ function MenuDrawer({
   onSettings: () => void;
   onDigest: () => void;
   onAnalytics: () => void;
+  onPeople: () => void;
   unreadCount: number;
 }) {
   const items: { label: string; detail: string; icon: UiIconName; onClick: () => void; badge?: number }[] = [
     { label: "Profile", detail: "Connected accounts & details", icon: "user", onClick: onProfile },
+    { label: "Close Circle", detail: "Combined updates for your people", icon: "people", onClick: onPeople },
     { label: "Analytics", detail: "Time saved & digital wellbeing", icon: "trending", onClick: onAnalytics },
     { label: "Notifications", detail: "Your grouped summary", icon: "bell", onClick: onDigest, badge: unreadCount },
     { label: "Settings", detail: "Appearance & preferences", icon: "settings", onClick: onSettings },
@@ -1121,6 +1172,211 @@ function AnalyticsView({ connected, onBack }: { connected: Platform[]; onBack: (
   );
 }
 
+function PeopleView({
+  people,
+  onAdd,
+  onRemove,
+  onBack,
+}: {
+  people: TrackedPerson[];
+  onAdd: (person: TrackedPerson) => void;
+  onRemove: (id: number) => void;
+  onBack: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [note, setNote] = useState("");
+  const [draftAccounts, setDraftAccounts] = useState<Partial<Record<Platform, string>>>({});
+
+  const trackedNames = people.map((person) => person.name);
+  const suggestions = knownContacts.filter((contact) => !trackedNames.includes(contact.name) && contact.platforms.length > 1);
+
+  const togglePlatform = (platform: Platform) => {
+    setDraftAccounts((current) => {
+      const next = { ...current };
+      if (platform in next) {
+        delete next[platform];
+      } else {
+        next[platform] = "";
+      }
+      return next;
+    });
+  };
+
+  const setHandle = (platform: Platform, handle: string) => {
+    setDraftAccounts((current) => ({ ...current, [platform]: handle }));
+  };
+
+  const resetForm = () => {
+    setName("");
+    setNote("");
+    setDraftAccounts({});
+  };
+
+  const addFromForm = () => {
+    const accounts = Object.entries(draftAccounts).map(([platform, handle]) => ({
+      platform: platform as Platform,
+      handle: handle?.trim() || `@${name.trim().toLowerCase().replace(/\s+/g, "")}`,
+    }));
+    if (!name.trim() || accounts.length === 0) return;
+    onAdd({ id: Date.now(), name: name.trim(), note: note.trim() || undefined, accounts });
+    resetForm();
+  };
+
+  const addSuggestion = (contact: (typeof knownContacts)[number]) => {
+    onAdd({
+      id: Date.now(),
+      name: contact.name,
+      avatar: contact.avatar,
+      accounts: contact.platforms.map((platform) => ({ platform, handle: contact.name })),
+    });
+  };
+
+  return (
+    <div className="min-h-dvh bg-[#1D8575] pb-10 [font-family:'Manrope:Medium',sans-serif]">
+      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
+        <button onClick={onBack} className="rounded-full border border-white/20 px-4 py-2 text-[11px] transition hover:bg-white/10">
+          <span aria-hidden="true">←</span> Back
+        </button>
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-[14px]">Close Circle</h1>
+        <span className="rounded-full bg-white/10 px-4 py-2 text-[10px] text-white/75">{people.length} tracked</span>
+      </header>
+
+      <div className="mx-auto grid w-full max-w-[1120px] gap-5 px-4 py-5 md:grid-cols-[minmax(0,1fr)_340px] md:px-8 md:py-8">
+        <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+          <div className="border-b border-[#CADFD9] pb-6">
+            <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Stay close to the people who matter</p>
+            <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
+              Your close circle
+            </h2>
+            <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
+              Link someone's accounts across platforms as one person to get a combined update instead of checking each app.
+            </p>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {people.length === 0 && (
+              <p className="rounded-[17px] border border-dashed border-[#CADFD9] p-5 text-center text-[11px] text-[#86A69F]">
+                You haven't added anyone yet — add someone from the suggestions or the form on the right.
+              </p>
+            )}
+            {people.map((person) => (
+              <article key={person.id} className="flex items-start gap-3 rounded-[18px] border border-[#CADFD9] bg-[#F1F8F6] p-4">
+                {person.avatar ? (
+                  <img src={person.avatar} alt="" className="size-11 shrink-0 rounded-full object-cover" />
+                ) : (
+                  <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[#DBEBE7] text-[11px] text-[#1D8575]">
+                    {person.name.split(" ").map((part) => part[0]).join("").slice(0, 2)}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[13px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{person.name}</p>
+                    <button
+                      onClick={() => onRemove(person.id)}
+                      className="shrink-0 rounded-full border border-[#B7D0CA] bg-white px-3 py-1.5 text-[9px] text-[#557A73] transition hover:border-[#86A69F] hover:text-[#22524B]"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  {person.note && <p className="mt-0.5 text-[10px] text-[#6D8F88]">{person.note}</p>}
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {person.accounts.map((account) => (
+                      <span key={account.platform} className="flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1.5 text-[9px] text-[#557A73]">
+                        <PlatformMark name={account.platform} small />
+                        {account.handle}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {suggestions.length > 0 && (
+            <div className="mt-6 border-t border-[#CADFD9] pt-5">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#86A69F]">Suggested from your accounts</p>
+              <div className="mt-3 space-y-2">
+                {suggestions.map((contact) => (
+                  <div key={contact.name} className="flex items-center gap-3 rounded-[15px] border border-[#CADFD9] p-3">
+                    <img src={contact.avatar} alt="" className="size-9 shrink-0 rounded-full object-cover" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{contact.name}</p>
+                      <p className="mt-0.5 text-[10px] text-[#6D8F88]">Seen on {contact.platforms.length} platforms</p>
+                    </div>
+                    <button
+                      onClick={() => addSuggestion(contact)}
+                      className="shrink-0 rounded-full bg-[#04B89C] px-3 py-2 text-[9px] text-white transition hover:bg-[#1D8575]"
+                    >
+                      Add
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+
+        <aside className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+          <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Add someone manually</p>
+          <h3 className="mt-2 text-[16px] text-[#1D8575]">Link their accounts</h3>
+
+          <label className="mt-4 block text-[10px] text-[#557A73]">
+            Name
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="e.g. Taylor Nguyen"
+              className="mt-1.5 w-full rounded-[12px] bg-[#F1F8F6] px-3 py-2.5 text-[12px] outline-none focus:ring-1 focus:ring-[#86A69F]"
+            />
+          </label>
+
+          <label className="mt-3 block text-[10px] text-[#557A73]">
+            Label (optional)
+            <input
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="e.g. Close friend, Sister, Coworker"
+              className="mt-1.5 w-full rounded-[12px] bg-[#F1F8F6] px-3 py-2.5 text-[12px] outline-none focus:ring-1 focus:ring-[#86A69F]"
+            />
+          </label>
+
+          <p className="mt-4 text-[10px] text-[#557A73]">Which accounts are theirs?</p>
+          <div className="mt-2 space-y-2">
+            {platforms.map((platform) => {
+              const linked = platform.name in draftAccounts;
+              return (
+                <div key={platform.name} className={`rounded-[12px] border p-2.5 transition ${linked ? "border-[#1D8575] bg-[#F1F8F6]" : "border-[#CADFD9]"}`}>
+                  <button onClick={() => togglePlatform(platform.name)} className="flex w-full items-center gap-2 text-left">
+                    <PlatformMark name={platform.name} small />
+                    <span className="flex-1 text-[11px] text-[#22524B]">{platform.name}</span>
+                    <span className={`size-4 rounded-full border ${linked ? "border-[#1D8575] bg-[#1D8575]" : "border-[#B7D0CA]"}`} />
+                  </button>
+                  {linked && (
+                    <input
+                      value={draftAccounts[platform.name] ?? ""}
+                      onChange={(event) => setHandle(platform.name, event.target.value)}
+                      placeholder="@handle or display name"
+                      className="mt-2 w-full rounded-[10px] bg-white px-3 py-2 text-[11px] outline-none focus:ring-1 focus:ring-[#86A69F]"
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <button
+            disabled={!name.trim() || Object.keys(draftAccounts).length === 0}
+            onClick={addFromForm}
+            className="mt-5 w-full rounded-[12px] bg-[#04B89C] px-4 py-3 text-[11px] text-white transition hover:bg-[#1D8575] disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            Add to close circle
+          </button>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
 function SummaryView({ onBack }: { onBack: () => void }) {
   const [reviewed, setReviewed] = useState<number[]>([]);
   const [summaryTime, setSummaryTime] = useState("6:00 PM");
@@ -1245,7 +1501,7 @@ function SummaryView({ onBack }: { onBack: () => void }) {
   );
 }
 
-function AiSummaryView({ connected }: { connected: Platform[] }) {
+function AiSummaryView({ connected, people }: { connected: Platform[]; people: TrackedPerson[] }) {
   const platformSummaries: Record<Platform, { headline: string; summary: string; sentiment: string; topTopic: string; stat: string }> = {
     Instagram: {
       headline: "Mostly catching up with Jordan and weekend plans",
@@ -1286,6 +1542,49 @@ function AiSummaryView({ connected }: { connected: Platform[] }) {
 
   return (
     <div className="mx-auto w-full max-w-[900px] px-4 py-5 md:px-8 md:py-8">
+      {people.length > 0 && (
+        <section className="mb-5 rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+          <div className="flex flex-col gap-3 border-b border-[#CADFD9] pb-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Close circle</p>
+              <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
+                What they've been up to
+              </h2>
+              <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
+                Combined updates for the people you've linked across platforms.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {people.map((person) => (
+              <article key={person.id} className="rounded-[18px] border border-[#CADFD9] bg-[#F1F8F6] p-4">
+                <div className="flex items-center gap-3">
+                  {person.avatar ? (
+                    <img src={person.avatar} alt="" className="size-10 shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#DBEBE7] text-[10px] text-[#1D8575]">
+                      {person.name.split(" ").map((part) => part[0]).join("").slice(0, 2)}
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{person.name}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      {person.accounts.map((account) => (
+                        <PlatformMark key={account.platform} name={account.platform} small />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-3 text-[11px] leading-relaxed text-[#557A73]">
+                  {PERSON_SUMMARIES[person.name] ?? "No linked platform activity yet — updates will appear here once they post."}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
         <div className="flex flex-col gap-3 border-b border-[#CADFD9] pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -1593,7 +1892,7 @@ function ComposeView({ onPublish, onCancel }: { onPublish: (text: string, select
   );
 }
 
-type UiIconName = "search" | "more" | "compose" | "phone" | "video" | "info" | "attach" | "image" | "send" | "plus" | "feed" | "message" | "settings" | "clock" | "bell" | "trending" | "menu" | "close" | "chevronRight" | "user" | "sparkle";
+type UiIconName = "search" | "more" | "compose" | "phone" | "video" | "info" | "attach" | "image" | "send" | "plus" | "feed" | "message" | "settings" | "clock" | "bell" | "trending" | "menu" | "close" | "chevronRight" | "user" | "sparkle" | "people";
 
 function UiIcon({ name, className = "size-4" }: { name: UiIconName; className?: string }) {
   return (
@@ -1619,6 +1918,7 @@ function UiIcon({ name, className = "size-4" }: { name: UiIconName; className?: 
       {name === "chevronRight" && <path d="m9 18 6-6-6-6" />}
       {name === "user" && <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" /></>}
       {name === "sparkle" && <><path d="M12 3v4" /><path d="M12 17v4" /><path d="M3 12h4" /><path d="M17 12h4" /><path d="m18 6-2.5 2.5" /><path d="m8.5 15.5-2.5 2.5" /><path d="m6 6 2.5 2.5" /><path d="m15.5 15.5 2.5 2.5" /></>}
+      {name === "people" && <><circle cx="9" cy="8" r="3.2" /><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5" /><circle cx="17" cy="8.5" r="2.6" /><path d="M15.2 14.8c2.4.3 4.3 2.3 4.3 5.2" /></>}
     </svg>
   );
 }
@@ -1932,11 +2232,13 @@ export default function App() {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [peopleOpen, setPeopleOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [nightMode, setNightMode] = useState(
     () => typeof window !== "undefined" && window.localStorage.getItem("quietly-theme") === "dark",
   );
   const [connectedAccounts, setConnectedAccounts] = useState<Platform[]>(["Instagram", "LinkedIn"]);
+  const [trackedPeople, setTrackedPeople] = useState<TrackedPerson[]>(initialTrackedPeople);
 
   const publish = (text: string, selected: Platform[]) => {
     const platform = platforms.find((item) => item.name === selected[0]) ?? platforms[0];
@@ -1974,6 +2276,14 @@ export default function App() {
     window.localStorage.setItem("quietly-theme", night ? "dark" : "light");
   };
 
+  const addTrackedPerson = (person: TrackedPerson) => {
+    setTrackedPeople([...trackedPeople, person]);
+  };
+
+  const removeTrackedPerson = (id: number) => {
+    setTrackedPeople(trackedPeople.filter((person) => person.id !== id));
+  };
+
   if (profileOpen) {
     return (
       <div className={nightMode ? "theme-dark" : ""}>
@@ -2006,6 +2316,19 @@ export default function App() {
     );
   }
 
+  if (peopleOpen) {
+    return (
+      <div className={nightMode ? "theme-dark" : ""}>
+        <PeopleView
+          people={trackedPeople}
+          onAdd={addTrackedPerson}
+          onRemove={removeTrackedPerson}
+          onBack={() => setPeopleOpen(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={nightMode ? "theme-dark" : ""}>
       <div className="min-h-dvh bg-[#F1F8F6] text-[#0D2521] md:pl-[230px]">
@@ -2015,7 +2338,7 @@ export default function App() {
           {tab === "feeds" && <FeedView posts={posts} onCompose={() => setTab("compose")} />}
           {tab === "compose" && <ComposeView onPublish={publish} onCancel={() => setTab("feeds")} />}
           {tab === "messages" && <MessagesView />}
-          {tab === "ai" && <AiSummaryView connected={connectedAccounts} />}
+          {tab === "ai" && <AiSummaryView connected={connectedAccounts} people={trackedPeople} />}
         </main>
         <MenuDrawer
           open={menuOpen}
@@ -2036,6 +2359,10 @@ export default function App() {
           onAnalytics={() => {
             setMenuOpen(false);
             setAnalyticsOpen(true);
+          }}
+          onPeople={() => {
+            setMenuOpen(false);
+            setPeopleOpen(true);
           }}
         />
       </div>
