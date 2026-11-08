@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type Tab = "compose" | "feeds" | "messages" | "ai";
+
+const SWIPE_TAB_ORDER: Tab[] = ["feeds", "ai", "messages"];
 type Platform = "Discord" | "Instagram" | "Facebook" | "LinkedIn" | "Snapchat";
 
 const platforms: { name: Platform; icon: string; color: string }[] = [
@@ -2261,6 +2263,29 @@ export default function App() {
   const [connectedAccounts, setConnectedAccounts] = useState<Platform[]>(["Instagram", "LinkedIn"]);
   const [trackedPeople, setTrackedPeople] = useState<TrackedPerson[]>(initialTrackedPeople);
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([]);
+  const touchStartRef = useRef<{ x: number; y: number; skip: boolean } | null>(null);
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+    const touch = event.touches[0];
+    const target = event.target as HTMLElement;
+    const skip = !!target.closest(".overflow-x-auto, input, textarea, select");
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, skip };
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start || start.skip || !SWIPE_TAB_ORDER.includes(tab)) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const currentIndex = SWIPE_TAB_ORDER.indexOf(tab);
+    const nextIndex = dx < 0 ? currentIndex + 1 : currentIndex - 1;
+    if (nextIndex >= 0 && nextIndex < SWIPE_TAB_ORDER.length) {
+      setTab(SWIPE_TAB_ORDER[nextIndex]);
+    }
+  };
 
   const publish = (text: string, selected: Platform[]) => {
     const platform = platforms.find((item) => item.name === selected[0]) ?? platforms[0];
@@ -2346,7 +2371,11 @@ export default function App() {
     <div className={nightMode ? "theme-dark" : ""}>
       <div className="min-h-dvh bg-[#F1F8F6] text-[#0D2521] md:pl-[230px]">
         <Navigation tab={tab} setTab={setTab} />
-        <main className="min-h-dvh pb-24 md:pb-0">
+        <main
+          className="min-h-dvh pb-24 md:pb-0"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           <AppHeader
             tab={tab}
             onMenu={() => setMenuOpen(true)}
