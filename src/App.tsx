@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-type Tab = "compose" | "feeds" | "messages";
+type Tab = "compose" | "feeds" | "messages" | "ai";
 type Platform = "Discord" | "Instagram" | "Facebook" | "LinkedIn" | "Snapchat";
 
 const platforms: { name: Platform; icon: string; color: string }[] = [
@@ -537,7 +537,7 @@ function AppHeader({
   tab: Tab;
   onMenu: () => void;
 }) {
-  const titles: Record<Tab, string> = { compose: "New Post", feeds: "Feeds", messages: "Messages" };
+  const titles: Record<Tab, string> = { compose: "New Post", feeds: "Feeds", messages: "Messages", ai: "AI Insights" };
   return (
     <header className="sticky top-0 z-30 flex h-[72px] items-center justify-end border-b border-[#CADFD9] bg-[#F1F8F6]/95 px-5 backdrop-blur-xl md:px-8">
       <h1 className="absolute left-1/2 -translate-x-1/2 text-[15px] tracking-[-0.01em]">{titles[tab]}</h1>
@@ -1245,7 +1245,105 @@ function SummaryView({ onBack }: { onBack: () => void }) {
   );
 }
 
-function FeedView({ posts }: { posts: typeof initialPosts }) {
+function AiSummaryView({ connected }: { connected: Platform[] }) {
+  const platformSummaries: Record<Platform, { headline: string; summary: string; sentiment: string; topTopic: string; stat: string }> = {
+    Instagram: {
+      headline: "Mostly catching up with Jordan and weekend plans",
+      summary: "Jordan confirmed Thursday plans and the Design Circle group is close to finalizing a weekend meetup. Engagement on your last photo post is above average.",
+      sentiment: "Upbeat",
+      topTopic: "Weekend plans",
+      stat: "14 new posts · 3 direct replies",
+    },
+    LinkedIn: {
+      headline: "A few professional touchpoints worth a reply",
+      summary: "Leah Kim accepted your introduction and sent a thank-you note. The Slow Edit article you saved is getting discussed in your network.",
+      sentiment: "Professional",
+      topTopic: "Networking",
+      stat: "6 new posts · 1 new connection",
+    },
+    Facebook: {
+      headline: "Local Run Club changed Saturday's route",
+      summary: "The run now starts at the west gate at 8:00 AM. Leah Kim also shared an update that got a handful of reactions from mutual friends.",
+      sentiment: "Neutral",
+      topTopic: "Local Run Club",
+      stat: "5 new posts · 2 event updates",
+    },
+    Discord: {
+      headline: "Quiet week in your servers",
+      summary: "Jordan Lee posted a text update in the Design Circle channel. No urgent mentions — a good week to stay unplugged.",
+      sentiment: "Calm",
+      topTopic: "Design Circle",
+      stat: "3 new messages · 0 mentions",
+    },
+    Snapchat: {
+      headline: "Sam and Priya shared quick moments",
+      summary: "Sam Rivera sent a photo from a quiet reading spot, and Priya Shah checked in about weekend plans. Nothing time-sensitive.",
+      sentiment: "Casual",
+      topTopic: "Catching up",
+      stat: "4 new snaps · 2 replies waiting",
+    },
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-[900px] px-4 py-5 md:px-8 md:py-8">
+      <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+        <div className="flex flex-col gap-3 border-b border-[#CADFD9] pb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">AI insights</p>
+            <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
+              A summary for each account
+            </h2>
+            <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
+              Quietly reads what changed on each platform so you can catch up in seconds, not scroll for minutes.
+            </p>
+          </div>
+          <span className="w-fit rounded-full bg-[#E8F3F0] px-3 py-2 text-[9px] text-[#04B89C]">
+            Generated now
+          </span>
+        </div>
+
+        <div className="mt-5 space-y-3">
+          {platforms.map((platform) => {
+            const summary = platformSummaries[platform.name];
+            const isConnected = connected.includes(platform.name);
+            return (
+              <article
+                key={platform.name}
+                className={`rounded-[18px] border p-4 transition ${
+                  isConnected ? "border-[#CADFD9] bg-[#F1F8F6]" : "border-dashed border-[#CADFD9] bg-white opacity-70"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <PlatformMark name={platform.name} />
+                    <div>
+                      <p className="text-[13px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{platform.name}</p>
+                      <p className="mt-0.5 text-[10px] text-[#6D8F88]">{summary.stat}</p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[9px] text-[#557A73]">{summary.sentiment}</span>
+                </div>
+                {isConnected ? (
+                  <>
+                    <h3 className="mt-3 text-[13px] font-semibold text-[#13332E]">{summary.headline}</h3>
+                    <p className="mt-2 text-[11px] leading-relaxed text-[#557A73]">{summary.summary}</p>
+                    <span className="mt-3 inline-block rounded-full bg-[#DBEBE7] px-3 py-1.5 text-[9px] text-[#1D8575]">
+                      Top topic: {summary.topTopic}
+                    </span>
+                  </>
+                ) : (
+                  <p className="mt-3 text-[11px] leading-relaxed text-[#86A69F]">Connect this account in your profile to get an AI summary.</p>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function FeedView({ posts, onCompose }: { posts: typeof initialPosts; onCompose: () => void }) {
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([]);
   const [liked, setLiked] = useState<number[]>([]);
   const [openComments, setOpenComments] = useState<number | null>(null);
@@ -1269,6 +1367,14 @@ function FeedView({ posts }: { posts: typeof initialPosts }) {
 
   return (
     <div className="feed-depth-background min-h-[calc(100dvh-72px)] w-full">
+      <button
+        onClick={onCompose}
+        className="fixed bottom-24 right-5 z-30 flex items-center gap-2 rounded-full bg-[#1D8575] px-5 py-3.5 text-[11px] text-white shadow-[0_14px_30px_rgba(19,51,46,0.3)] transition hover:bg-[#0D2521] md:bottom-8"
+        aria-label="New post"
+      >
+        <UiIcon name="plus" className="size-4" />
+        New post
+      </button>
       <div className="sticky top-[72px] z-20 border-b border-[#CADFD9] bg-[#F1F8F6]/95 backdrop-blur-xl">
         <div className="no-scrollbar mx-auto flex w-full max-w-[760px] gap-3 overflow-x-auto px-4 py-4 md:px-8">
           {["All", ...platforms.map((item) => item.name)].map((item) => (
@@ -1404,7 +1510,7 @@ function FeedView({ posts }: { posts: typeof initialPosts }) {
   );
 }
 
-function ComposeView({ onPublish }: { onPublish: (text: string, selected: Platform[]) => void }) {
+function ComposeView({ onPublish, onCancel }: { onPublish: (text: string, selected: Platform[]) => void; onCancel: () => void }) {
   const [selected, setSelected] = useState<Platform[]>(platforms.map((item) => item.name));
   const [text, setText] = useState("");
   const [schedule, setSchedule] = useState("Now");
@@ -1415,6 +1521,12 @@ function ComposeView({ onPublish }: { onPublish: (text: string, selected: Platfo
 
   return (
     <div className="mx-auto w-full max-w-[760px] px-4 py-5 md:px-8 md:py-8">
+      <button
+        onClick={onCancel}
+        className="mb-4 rounded-full border border-[#B7D0CA] px-4 py-2 text-[11px] text-[#557A73] transition hover:border-[#86A69F] hover:text-[#22524B]"
+      >
+        <span aria-hidden="true">←</span> Back to feed
+      </button>
       <section className="rounded-[24px] border border-[#CADFD9] bg-white p-5 shadow-[0_18px_45px_rgba(19,51,46,0.06)] md:p-7">
         <div className="flex items-end justify-between">
           <div>
@@ -1481,7 +1593,7 @@ function ComposeView({ onPublish }: { onPublish: (text: string, selected: Platfo
   );
 }
 
-type UiIconName = "search" | "more" | "compose" | "phone" | "video" | "info" | "attach" | "image" | "send" | "plus" | "feed" | "message" | "settings" | "clock" | "bell" | "trending" | "menu" | "close" | "chevronRight" | "user";
+type UiIconName = "search" | "more" | "compose" | "phone" | "video" | "info" | "attach" | "image" | "send" | "plus" | "feed" | "message" | "settings" | "clock" | "bell" | "trending" | "menu" | "close" | "chevronRight" | "user" | "sparkle";
 
 function UiIcon({ name, className = "size-4" }: { name: UiIconName; className?: string }) {
   return (
@@ -1506,6 +1618,7 @@ function UiIcon({ name, className = "size-4" }: { name: UiIconName; className?: 
       {name === "close" && <><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>}
       {name === "chevronRight" && <path d="m9 18 6-6-6-6" />}
       {name === "user" && <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" /></>}
+      {name === "sparkle" && <><path d="M12 3v4" /><path d="M12 17v4" /><path d="M3 12h4" /><path d="M17 12h4" /><path d="m18 6-2.5 2.5" /><path d="m8.5 15.5-2.5 2.5" /><path d="m6 6 2.5 2.5" /><path d="m15.5 15.5 2.5 2.5" /></>}
     </svg>
   );
 }
@@ -1756,9 +1869,9 @@ function MessagesView() {
 
 function Navigation({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
   const items: { id: Tab; label: string; short: string; icon: UiIconName; color: string; active: string }[] = [
-    { id: "compose", label: "New Post", short: "+", icon: "plus", color: "#A7DED3", active: "#04B89C" },
     { id: "feeds", label: "Feeds", short: "F", icon: "feed", color: "#75CEBC", active: "#04B89C" },
     { id: "messages", label: "Messages", short: "M", icon: "message", color: "#A7DED3", active: "#1D8575" },
+    { id: "ai", label: "AI", short: "AI", icon: "sparkle", color: "#A7DED3", active: "#22524B" },
   ];
 
   return (
@@ -1899,9 +2012,10 @@ export default function App() {
         <Navigation tab={tab} setTab={setTab} />
         <main className="min-h-dvh pb-24 md:pb-0">
           <AppHeader tab={tab} onMenu={() => setMenuOpen(true)} />
-          {tab === "feeds" && <FeedView posts={posts} />}
-          {tab === "compose" && <ComposeView onPublish={publish} />}
+          {tab === "feeds" && <FeedView posts={posts} onCompose={() => setTab("compose")} />}
+          {tab === "compose" && <ComposeView onPublish={publish} onCancel={() => setTab("feeds")} />}
           {tab === "messages" && <MessagesView />}
+          {tab === "ai" && <AiSummaryView connected={connectedAccounts} />}
         </main>
         <MenuDrawer
           open={menuOpen}
