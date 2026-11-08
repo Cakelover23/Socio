@@ -2183,38 +2183,36 @@ function Navigation({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
 
   return (
     <>
-      <nav className="fixed inset-x-3 bottom-3 z-40 grid h-[68px] grid-cols-3 items-center gap-1 rounded-[22px] border border-[#B7D0CA] bg-white/95 p-1.5 shadow-[0_14px_38px_rgba(19,51,46,0.16)] backdrop-blur-xl md:hidden">
+      <nav className="fixed inset-x-3 bottom-3 z-40 grid h-16 grid-cols-3 items-stretch gap-1 rounded-[22px] border border-[#B7D0CA] bg-white/95 p-1 shadow-[0_14px_38px_rgba(19,51,46,0.16)] backdrop-blur-xl md:hidden">
         {items.map((item) =>
           item.id === "ai" ? (
             <button
               key={item.id}
               onClick={() => setTab(item.id)}
               aria-current={tab === item.id ? "page" : undefined}
-              className="relative flex h-full flex-col items-center justify-end gap-1 text-[9px]"
+              className="relative flex flex-col items-center justify-end pb-1"
             >
               <span
-                className={`absolute -top-6 grid size-[58px] place-items-center rounded-full border-[5px] border-[#F1F8F6] shadow-[0_12px_26px_rgba(4,184,156,0.45)] transition ${
+                className={`absolute -top-4 grid size-11 place-items-center rounded-full border-[3px] border-[#F1F8F6] shadow-[0_8px_18px_rgba(4,184,156,0.4)] transition ${
                   tab === item.id ? "scale-105 bg-[#04B89C] text-white" : "bg-[#1D8575] text-white"
                 }`}
               >
-                <UiIcon name={item.icon} className="size-6" />
+                <UiIcon name={item.icon} className="size-5" />
               </span>
-              <span className={`mt-10 ${tab === item.id ? "text-[#1D8575]" : "text-[#557A73]"}`}>{item.label}</span>
+              <span className={`mt-7 text-[9px] leading-none ${tab === item.id ? "text-[#1D8575]" : "text-[#557A73]"}`}>{item.label}</span>
             </button>
           ) : (
             <button
               key={item.id}
               onClick={() => setTab(item.id)}
               aria-current={tab === item.id ? "page" : undefined}
-              className={`flex flex-col items-center justify-center gap-1 rounded-[17px] py-2 text-[9px] transition ${
+              className={`flex flex-col items-center justify-center gap-0.5 rounded-[16px] text-[9px] leading-none transition ${
                 tab === item.id
                   ? "bg-[#1D8575] text-white shadow-[0_6px_15px_rgba(19,51,46,0.2)]"
                   : "text-[#557A73] hover:bg-[#DBEBE7] hover:text-[#1D8575]"
               }`}
             >
-              <span className={`grid size-6 place-items-center rounded-full ${tab === item.id ? "text-white" : "text-[#557A73]"}`}>
-                <UiIcon name={item.icon} className="size-[17px]" />
-              </span>
+              <UiIcon name={item.icon} className="size-[15px]" />
               <span>{item.label}</span>
             </button>
           ),
