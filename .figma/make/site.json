@@ -1,0 +1,10 @@
+{
+  "description": "Streamline social media interactions with a unified feed, centralized messaging, and optimized notifications, enhancing user experience and reducing screen time.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
