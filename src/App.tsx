@@ -1647,6 +1647,7 @@ function FeedView({ posts, onCompose }: { posts: typeof initialPosts; onCompose:
   const [liked, setLiked] = useState<number[]>([]);
   const [openComments, setOpenComments] = useState<number | null>(null);
   const [commentAdditions, setCommentAdditions] = useState<Record<number, number>>({});
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const filteredPosts =
     selectedPlatforms.length === 0
       ? posts
@@ -1675,19 +1676,44 @@ function FeedView({ posts, onCompose }: { posts: typeof initialPosts; onCompose:
         New post
       </button>
       <div className="sticky top-[72px] z-20 border-b border-[#CADFD9] bg-[#F1F8F6]/95 backdrop-blur-xl">
-        <div className="no-scrollbar mx-auto flex w-full max-w-[760px] gap-3 overflow-x-auto px-4 py-4 md:px-8">
-          {["All", ...platforms.map((item) => item.name)].map((item) => (
-            <button
-              key={item}
-              onClick={() => togglePlatformFilter(item as Platform | "All")}
-              data-platform={item}
-              data-active={item === "All" ? selectedPlatforms.length === 0 : selectedPlatforms.includes(item as Platform)}
-              aria-pressed={item === "All" ? selectedPlatforms.length === 0 : selectedPlatforms.includes(item as Platform)}
-              className="platform-filter shrink-0 rounded-full border px-5 py-3 text-xs transition"
-            >
-              {item}
-            </button>
-          ))}
+        <div className="relative mx-auto w-full max-w-[760px] px-4 py-3 md:px-8">
+          <button
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            aria-expanded={filtersOpen}
+            className={`flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs transition ${
+              selectedPlatforms.length > 0
+                ? "border-[#1D8575] bg-[#1D8575] text-white"
+                : "border-[#CADFD9] bg-white text-[#13332E] hover:border-[#1D8575]"
+            }`}
+          >
+            <UiIcon name="filter" className="size-4" />
+            Filters
+            {selectedPlatforms.length > 0 && (
+              <span className="grid size-5 place-items-center rounded-full bg-white/25 text-[10px]">{selectedPlatforms.length}</span>
+            )}
+          </button>
+          {filtersOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setFiltersOpen(false)} aria-hidden="true" />
+              <div className="absolute left-4 top-full z-20 mt-2 w-[min(320px,calc(100vw-2rem))] rounded-[18px] border border-[#CADFD9] bg-white p-3 shadow-[0_18px_40px_rgba(19,51,46,0.15)] md:left-8">
+                <p className="px-2 pb-2 text-[10px] uppercase tracking-[0.16em] text-[#6D8F88]">Show posts from</p>
+                <div className="flex flex-wrap gap-2 px-1">
+                  {["All", ...platforms.map((item) => item.name)].map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => togglePlatformFilter(item as Platform | "All")}
+                      data-platform={item}
+                      data-active={item === "All" ? selectedPlatforms.length === 0 : selectedPlatforms.includes(item as Platform)}
+                      aria-pressed={item === "All" ? selectedPlatforms.length === 0 : selectedPlatforms.includes(item as Platform)}
+                      className="platform-filter shrink-0 rounded-full border px-4 py-2 text-xs transition"
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -1892,7 +1918,7 @@ function ComposeView({ onPublish, onCancel }: { onPublish: (text: string, select
   );
 }
 
-type UiIconName = "search" | "more" | "compose" | "phone" | "video" | "info" | "attach" | "image" | "send" | "plus" | "feed" | "message" | "settings" | "clock" | "bell" | "trending" | "menu" | "close" | "chevronRight" | "user" | "sparkle" | "people";
+type UiIconName = "search" | "more" | "compose" | "phone" | "video" | "info" | "attach" | "image" | "send" | "plus" | "feed" | "message" | "settings" | "clock" | "bell" | "trending" | "menu" | "close" | "chevronRight" | "user" | "sparkle" | "people" | "filter";
 
 function UiIcon({ name, className = "size-4" }: { name: UiIconName; className?: string }) {
   return (
@@ -1919,6 +1945,7 @@ function UiIcon({ name, className = "size-4" }: { name: UiIconName; className?: 
       {name === "user" && <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" /></>}
       {name === "sparkle" && <><path d="M12 3v4" /><path d="M12 17v4" /><path d="M3 12h4" /><path d="M17 12h4" /><path d="m18 6-2.5 2.5" /><path d="m8.5 15.5-2.5 2.5" /><path d="m6 6 2.5 2.5" /><path d="m15.5 15.5 2.5 2.5" /></>}
       {name === "people" && <><circle cx="9" cy="8" r="3.2" /><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5" /><circle cx="17" cy="8.5" r="2.6" /><path d="M15.2 14.8c2.4.3 4.3 2.3 4.3 5.2" /></>}
+      {name === "filter" && <path d="M4 5h16M7 12h10M10 19h4" />}
     </svg>
   );
 }
