@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-type Tab = "compose" | "feeds" | "messages";
+type Tab = "compose" | "feeds" | "messages" | "analytics";
 type Platform = "Discord" | "Instagram" | "Facebook" | "LinkedIn" | "Snapchat";
 
 const platforms: { name: Platform; icon: string; color: string }[] = [
@@ -537,12 +537,9 @@ function AppHeader({
   tab: Tab;
   onMenu: () => void;
 }) {
-  const titles = { compose: "New Post", feeds: "Feeds", messages: "Messages" };
+  const titles: Record<Tab, string> = { compose: "New Post", feeds: "Feeds", messages: "Messages", analytics: "Analytics" };
   return (
-    <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-[#CADFD9] bg-[#F1F8F6]/95 px-5 backdrop-blur-xl md:px-8">
-      <button onClick={onMenu} className="size-9 overflow-hidden rounded-full border border-[#B7D0CA] bg-white transition hover:ring-2 hover:ring-[#04B89C]/30" aria-label="Open menu">
-        <img src="/assets/ingrid-profile.png" alt="" className="size-full object-cover" />
-      </button>
+    <header className="sticky top-0 z-30 flex h-[72px] items-center justify-end border-b border-[#CADFD9] bg-[#F1F8F6]/95 px-5 backdrop-blur-xl md:px-8">
       <h1 className="absolute left-1/2 -translate-x-1/2 text-[15px] tracking-[-0.01em]">{titles[tab]}</h1>
       <button
         onClick={onMenu}
@@ -572,7 +569,7 @@ function MenuDrawer({
   unreadCount: number;
 }) {
   const items: { label: string; detail: string; icon: UiIconName; onClick: () => void; badge?: number }[] = [
-    { label: "Profile", detail: "Connected accounts & analytics", icon: "user", onClick: onProfile },
+    { label: "Profile", detail: "Connected accounts & details", icon: "user", onClick: onProfile },
     { label: "Notifications", detail: "Your grouped summary", icon: "bell", onClick: onDigest, badge: unreadCount },
     { label: "Settings", detail: "Appearance & preferences", icon: "settings", onClick: onSettings },
   ];
@@ -758,29 +755,6 @@ function ProfileView({
     Discord: "ingrid.s",
   };
   const connectionDetails = platforms.find((platform) => platform.name === connectingPlatform);
-  const analytics = [
-    {
-      icon: "clock" as UiIconName,
-      label: "Time spent in social apps",
-      value: "2h 45m",
-      detail: "this week · down 38% since you started grouping feeds here",
-      accent: "#04B89C",
-    },
-    {
-      icon: "bell" as UiIconName,
-      label: "Notifications reduced",
-      value: "76%",
-      detail: "312 pings across your accounts became 74 grouped summaries",
-      accent: "#1D8575",
-    },
-    {
-      icon: "trending" as UiIconName,
-      label: "Posts shared",
-      value: "18",
-      detail: "across " + Math.max(connected.length, 1) + " platforms — composed once, published everywhere",
-      accent: "#22524B",
-    },
-  ];
 
   const beginConnection = (platform: Platform) => {
     setConnectingPlatform(platform);
@@ -898,53 +872,6 @@ function ProfileView({
             <p className="text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">You stay in control</p>
             <p className="mt-2 text-[10px] leading-relaxed text-[#557A73]">
               Quietly only uses connected accounts to show your feed, messages, and scheduled summaries. You can remove access at any time.
-            </p>
-          </div>
-        </section>
-      </div>
-
-      <div className="mx-auto mt-5 w-full max-w-[1120px] px-4 pb-5 md:px-8 md:pb-8">
-        <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
-          <div className="flex flex-col gap-3 border-b border-[#CADFD9] pb-6 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Digital wellbeing</p>
-              <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
-                Your analytics
-              </h2>
-              <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
-                A look at how staying connected through Quietly compares to checking every app on its own.
-              </p>
-            </div>
-            <span className="w-fit rounded-full bg-[#E8F3F0] px-3 py-2 text-[9px] text-[#04B89C]">
-              Updated today
-            </span>
-          </div>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            {analytics.map((stat) => (
-              <div key={stat.label} className="rounded-[17px] border border-[#CADFD9] bg-[#F1F8F6] p-4">
-                <div
-                  className="grid size-9 place-items-center rounded-full bg-white"
-                  style={{ color: stat.accent }}
-                >
-                  <UiIcon name={stat.icon} />
-                </div>
-                <p
-                  className="mt-4 text-[26px] font-extrabold tracking-[-0.03em] [font-family:'Manrope:ExtraBold',sans-serif]"
-                  style={{ color: stat.accent }}
-                >
-                  {stat.value}
-                </p>
-                <p className="mt-1 text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{stat.label}</p>
-                <p className="mt-1.5 text-[10px] leading-relaxed text-[#557A73]">{stat.detail}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-5 rounded-[17px] bg-[#DBEBE7] p-4">
-            <p className="text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">Why this matters</p>
-            <p className="mt-2 text-[10px] leading-relaxed text-[#557A73]">
-              Grouping your feeds and messages means fewer apps to open and fewer interruptions pulling you back in — so you can stay in the loop and still post just as often, with more time left for everything else.
             </p>
           </div>
         </section>
@@ -1099,6 +1026,81 @@ function ProfileView({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function AnalyticsView({ connected }: { connected: Platform[] }) {
+  const analytics = [
+    {
+      icon: "clock" as UiIconName,
+      label: "Time spent in social apps",
+      value: "2h 45m",
+      detail: "this week · down 38% since you started grouping feeds here",
+      accent: "#04B89C",
+    },
+    {
+      icon: "bell" as UiIconName,
+      label: "Notifications reduced",
+      value: "76%",
+      detail: "312 pings across your accounts became 74 grouped summaries",
+      accent: "#1D8575",
+    },
+    {
+      icon: "trending" as UiIconName,
+      label: "Posts shared",
+      value: "18",
+      detail: "across " + Math.max(connected.length, 1) + " platforms — composed once, published everywhere",
+      accent: "#22524B",
+    },
+  ];
+
+  return (
+    <div className="mx-auto w-full max-w-[1120px] px-4 py-5 md:px-8 md:py-8">
+      <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+        <div className="flex flex-col gap-3 border-b border-[#CADFD9] pb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Digital wellbeing</p>
+            <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
+              Your analytics
+            </h2>
+            <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
+              A look at how staying connected through Quietly compares to checking every app on its own.
+            </p>
+          </div>
+          <span className="w-fit rounded-full bg-[#E8F3F0] px-3 py-2 text-[9px] text-[#04B89C]">
+            Updated today
+          </span>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          {analytics.map((stat) => (
+            <div key={stat.label} className="rounded-[17px] border border-[#CADFD9] bg-[#F1F8F6] p-4">
+              <div
+                className="grid size-9 place-items-center rounded-full bg-white"
+                style={{ color: stat.accent }}
+              >
+                <UiIcon name={stat.icon} />
+              </div>
+              <p
+                className="mt-4 text-[26px] font-extrabold tracking-[-0.03em] [font-family:'Manrope:ExtraBold',sans-serif]"
+                style={{ color: stat.accent }}
+              >
+                {stat.value}
+              </p>
+              <p className="mt-1 text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{stat.label}</p>
+              <p className="mt-1.5 text-[10px] leading-relaxed text-[#557A73]">{stat.detail}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 rounded-[17px] bg-[#DBEBE7] p-4">
+          <p className="text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">Why this matters</p>
+          <p className="mt-2 text-[10px] leading-relaxed text-[#557A73]">
+            Grouping your feeds and messages means fewer apps to open and fewer interruptions pulling you back in — so you can stay in the loop and still post just as often, with more time left for everything else.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
@@ -1741,11 +1743,12 @@ function Navigation({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
     { id: "compose", label: "New Post", short: "+", icon: "plus", color: "#A7DED3", active: "#04B89C" },
     { id: "feeds", label: "Feeds", short: "F", icon: "feed", color: "#75CEBC", active: "#04B89C" },
     { id: "messages", label: "Messages", short: "M", icon: "message", color: "#A7DED3", active: "#1D8575" },
+    { id: "analytics", label: "Analytics", short: "A", icon: "trending", color: "#75CEBC", active: "#22524B" },
   ];
 
   return (
     <>
-      <nav className="fixed inset-x-3 bottom-3 z-40 grid h-[68px] grid-cols-3 gap-1 rounded-[22px] border border-[#B7D0CA] bg-white/95 p-1.5 shadow-[0_14px_38px_rgba(19,51,46,0.16)] backdrop-blur-xl md:hidden">
+      <nav className="fixed inset-x-3 bottom-3 z-40 grid h-[68px] grid-cols-4 gap-1 rounded-[22px] border border-[#B7D0CA] bg-white/95 p-1.5 shadow-[0_14px_38px_rgba(19,51,46,0.16)] backdrop-blur-xl md:hidden">
         {items.map((item) => (
           <button
             key={item.id}
@@ -1875,6 +1878,7 @@ export default function App() {
           {tab === "feeds" && <FeedView posts={posts} />}
           {tab === "compose" && <ComposeView onPublish={publish} />}
           {tab === "messages" && <MessagesView />}
+          {tab === "analytics" && <AnalyticsView connected={connectedAccounts} />}
         </main>
         <MenuDrawer
           open={menuOpen}
