@@ -562,6 +562,29 @@ function ProfileView({
     Discord: "ingrid.s",
   };
   const connectionDetails = platforms.find((platform) => platform.name === connectingPlatform);
+  const analytics = [
+    {
+      icon: "clock" as UiIconName,
+      label: "Time spent in social apps",
+      value: "2h 45m",
+      detail: "this week · down 38% since you started grouping feeds here",
+      accent: "#04B89C",
+    },
+    {
+      icon: "bell" as UiIconName,
+      label: "Notifications reduced",
+      value: "76%",
+      detail: "312 pings across your accounts became 74 grouped summaries",
+      accent: "#1D8575",
+    },
+    {
+      icon: "trending" as UiIconName,
+      label: "Posts shared",
+      value: "18",
+      detail: "across " + Math.max(connected.length, 1) + " platforms — composed once, published everywhere",
+      accent: "#22524B",
+    },
+  ];
 
   const beginConnection = (platform: Platform) => {
     setConnectingPlatform(platform);
@@ -679,6 +702,53 @@ function ProfileView({
             <p className="text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">You stay in control</p>
             <p className="mt-2 text-[10px] leading-relaxed text-[#557A73]">
               Quietly only uses connected accounts to show your feed, messages, and scheduled summaries. You can remove access at any time.
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <div className="mx-auto mt-5 w-full max-w-[1120px] px-4 pb-5 md:px-8 md:pb-8">
+        <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+          <div className="flex flex-col gap-3 border-b border-[#CADFD9] pb-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Digital wellbeing</p>
+              <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
+                Your analytics
+              </h2>
+              <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-[#557A73]">
+                A look at how staying connected through Quietly compares to checking every app on its own.
+              </p>
+            </div>
+            <span className="w-fit rounded-full bg-[#E8F3F0] px-3 py-2 text-[9px] text-[#04B89C]">
+              Updated today
+            </span>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {analytics.map((stat) => (
+              <div key={stat.label} className="rounded-[17px] border border-[#CADFD9] bg-[#F1F8F6] p-4">
+                <div
+                  className="grid size-9 place-items-center rounded-full bg-white"
+                  style={{ color: stat.accent }}
+                >
+                  <UiIcon name={stat.icon} />
+                </div>
+                <p
+                  className="mt-4 text-[26px] font-extrabold tracking-[-0.03em] [font-family:'Manrope:ExtraBold',sans-serif]"
+                  style={{ color: stat.accent }}
+                >
+                  {stat.value}
+                </p>
+                <p className="mt-1 text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">{stat.label}</p>
+                <p className="mt-1.5 text-[10px] leading-relaxed text-[#557A73]">{stat.detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 rounded-[17px] bg-[#DBEBE7] p-4">
+            <p className="text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">Why this matters</p>
+            <p className="mt-2 text-[10px] leading-relaxed text-[#557A73]">
+              Grouping your feeds and messages means fewer apps to open and fewer interruptions pulling you back in — so you can stay in the loop and still post just as often, with more time left for everything else.
             </p>
           </div>
         </section>
@@ -1197,7 +1267,7 @@ function ComposeView({ onPublish }: { onPublish: (text: string, selected: Platfo
   );
 }
 
-type UiIconName = "search" | "more" | "compose" | "phone" | "video" | "info" | "attach" | "image" | "send" | "plus" | "feed" | "message" | "settings";
+type UiIconName = "search" | "more" | "compose" | "phone" | "video" | "info" | "attach" | "image" | "send" | "plus" | "feed" | "message" | "settings" | "clock" | "bell" | "trending";
 
 function UiIcon({ name, className = "size-4" }: { name: UiIconName; className?: string }) {
   return (
@@ -1215,6 +1285,9 @@ function UiIcon({ name, className = "size-4" }: { name: UiIconName; className?: 
       {name === "feed" && <><rect x="4" y="4" width="16" height="16" rx="3" /><path d="M8 9h8" /><path d="M8 13h8" /><path d="M8 17h5" /></>}
       {name === "message" && <><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z" /><path d="M8 9h8" /><path d="M8 13h5" /></>}
       {name === "settings" && <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" /></>}
+      {name === "clock" && <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.5 2" /></>}
+      {name === "bell" && <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></>}
+      {name === "trending" && <><path d="m23 6-9.5 9.5-5-5L1 18" /><path d="M17 6h6v6" /></>}
     </svg>
   );
 }
