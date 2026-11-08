@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Streamliner</string>
+    <string name="title_activity_main">Streamliner</string>
+    <string name="package_name">com.streamliner.app</string>
+    <string name="custom_url_scheme">com.streamliner.app</string>
+</resources>
