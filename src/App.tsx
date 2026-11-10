@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 type Tab = "compose" | "feeds" | "messages" | "ai";
 
@@ -2461,28 +2461,82 @@ export default function App() {
   const [connectedAccounts, setConnectedAccounts] = useState<Platform[]>(["Instagram", "LinkedIn"]);
   const [trackedPeople, setTrackedPeople] = useState<TrackedPerson[]>(initialTrackedPeople);
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([]);
-  const touchStartRef = useRef<{ x: number; y: number; skip: boolean } | null>(null);
+  const swipeTrackRef = useRef<HTMLDivElement>(null);
+  const touchStateRef = useRef<{
+    x: number;
+    y: number;
+    skip: boolean;
+    dragging: boolean;
+    width: number;
+    dx: number;
+  } | null>(null);
+
+  const setTrackTransform = (px: number, animate: boolean) => {
+    const track = swipeTrackRef.current;
+    if (!track) return;
+    track.style.transition = animate ? "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)" : "none";
+    track.style.transform = `translate3d(${px}px, 0, 0)`;
+  };
+
+  // Keep the swipe track centered on the active tab whenever it changes via
+  // the bottom nav (not just via a finger drag), with no animation.
+  useLayoutEffect(() => {
+    if (!SWIPE_TAB_ORDER.includes(tab)) return;
+    const track = swipeTrackRef.current;
+    if (!track) return;
+    const width = track.parentElement?.getBoundingClientRect().width ?? window.innerWidth;
+    setTrackTransform(-width, false);
+  }, [tab]);
 
   const handleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
     const touch = event.touches[0];
     const target = event.target as HTMLElement;
     const skip = !!target.closest(".overflow-x-auto, input, textarea, select");
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY, skip };
+    const width = swipeTrackRef.current?.parentElement?.getBoundingClientRect().width ?? window.innerWidth;
+    touchStateRef.current = { x: touch.clientX, y: touch.clientY, skip, dragging: false, width, dx: 0 };
   };
 
-  const handleTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
-    const start = touchStartRef.current;
-    touchStartRef.current = null;
+  const handleTouchMove = (event: React.TouchEvent<HTMLElement>) => {
+    const start = touchStateRef.current;
     if (!start || start.skip || !SWIPE_TAB_ORDER.includes(tab)) return;
-    const touch = event.changedTouches[0];
+    const touch = event.touches[0];
     const dx = touch.clientX - start.x;
     const dy = touch.clientY - start.y;
-    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    const currentIndex = SWIPE_TAB_ORDER.indexOf(tab);
-    const nextIndex = dx < 0 ? currentIndex + 1 : currentIndex - 1;
-    if (nextIndex >= 0 && nextIndex < SWIPE_TAB_ORDER.length) {
-      setTab(SWIPE_TAB_ORDER[nextIndex]);
+    if (!start.dragging) {
+      if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+      start.dragging = true;
     }
+    const currentIndex = SWIPE_TAB_ORDER.indexOf(tab);
+    const atStart = currentIndex === 0 && dx > 0;
+    const atEnd = currentIndex === SWIPE_TAB_ORDER.length - 1 && dx < 0;
+    const resisted = atStart || atEnd ? dx * 0.35 : dx;
+    start.dx = dx;
+    setTrackTransform(resisted - start.width, false);
+  };
+
+  const handleTouchEnd = () => {
+    const start = touchStateRef.current;
+    touchStateRef.current = null;
+    if (!start || !start.dragging) return;
+    const currentIndex = SWIPE_TAB_ORDER.indexOf(tab);
+    const width = start.width;
+    const threshold = Math.min(110, width * 0.22);
+    let targetIndex = currentIndex;
+    if (start.dx <= -threshold && currentIndex < SWIPE_TAB_ORDER.length - 1) targetIndex = currentIndex + 1;
+    else if (start.dx >= threshold && currentIndex > 0) targetIndex = currentIndex - 1;
+
+    const finalOffset = targetIndex === currentIndex + 1 ? -2 * width : targetIndex === currentIndex - 1 ? 0 : -width;
+    setTrackTransform(finalOffset, true);
+
+    const track = swipeTrackRef.current;
+    const onTransitionEnd = () => {
+      track?.removeEventListener("transitionend", onTransitionEnd);
+      if (targetIndex !== currentIndex) {
+        setTab(SWIPE_TAB_ORDER[targetIndex]);
+      }
+      setTrackTransform(-width, false);
+    };
+    track?.addEventListener("transitionend", onTransitionEnd, { once: true });
   };
 
   const publish = (text: string, selected: Platform[]) => {
@@ -2580,7 +2634,9 @@ export default function App() {
         <main
           className="min-h-dvh pb-24 md:pb-0"
           onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
         >
           <AppHeader
             tab={tab}
@@ -2591,18 +2647,33 @@ export default function App() {
               ) : undefined
             }
           />
-          {tab === "feeds" && (
-            <FeedView posts={posts} onCompose={() => setTab("compose")} selectedPlatforms={selectedPlatforms} />
-          )}
-          {tab === "compose" && <ComposeView onPublish={publish} onCancel={() => setTab("feeds")} />}
-          {tab === "messages" && <MessagesView />}
-          {tab === "ai" && (
-            <AiSummaryView
-              connected={connectedAccounts}
-              people={trackedPeople}
-              onAddPerson={addTrackedPerson}
-              onRemovePerson={removeTrackedPerson}
-            />
+          {tab === "compose" ? (
+            <ComposeView onPublish={publish} onCancel={() => setTab("feeds")} />
+          ) : (
+            <div className="overflow-hidden" style={{ touchAction: "pan-y" }}>
+              <div ref={swipeTrackRef} className="flex w-full">
+                {[
+                  SWIPE_TAB_ORDER[SWIPE_TAB_ORDER.indexOf(tab) - 1],
+                  tab,
+                  SWIPE_TAB_ORDER[SWIPE_TAB_ORDER.indexOf(tab) + 1],
+                ].map((panelTab, index) => (
+                  <div key={panelTab ?? `empty-${index}`} className="w-full shrink-0">
+                    {panelTab === "feeds" && (
+                      <FeedView posts={posts} onCompose={() => setTab("compose")} selectedPlatforms={selectedPlatforms} />
+                    )}
+                    {panelTab === "messages" && <MessagesView />}
+                    {panelTab === "ai" && (
+                      <AiSummaryView
+                        connected={connectedAccounts}
+                        people={trackedPeople}
+                        onAddPerson={addTrackedPerson}
+                        onRemovePerson={removeTrackedPerson}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </main>
         <MenuDrawer
