@@ -2374,48 +2374,50 @@ function MessagesView() {
 }
 
 function Navigation({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
-  const items: { id: Tab; label: string; short: string; icon: UiIconName; color: string; active: string }[] = [
-    { id: "feeds", label: "Feeds", short: "F", icon: "feed", color: "#75CEBC", active: "#04B89C" },
-    { id: "ai", label: "AI", short: "AI", icon: "sparkle", color: "#A7DED3", active: "#22524B" },
-    { id: "messages", label: "Messages", short: "M", icon: "message", color: "#A7DED3", active: "#1D8575" },
+  const items: { id: Tab; label: string; icon: UiIconName }[] = [
+    { id: "feeds", label: "Feeds", icon: "feed" },
+    { id: "ai", label: "AI", icon: "sparkle" },
+    { id: "messages", label: "Messages", icon: "message" },
   ];
+
+  const navigationButtons = items.map((item) =>
+    item.id === "ai" ? (
+      <button
+        key={item.id}
+        onClick={() => setTab(item.id)}
+        aria-current={tab === item.id ? "page" : undefined}
+        className="flex h-full items-center justify-center"
+      >
+        <span
+          className={`grid size-11 place-items-center rounded-full border-[3px] border-[#F1F8F6] shadow-[0_8px_18px_rgba(4,184,156,0.4)] transition ${
+            tab === item.id ? "scale-105 bg-[#04B89C] text-white" : "bg-[#1D8575] text-white"
+          }`}
+        >
+          <UiIcon name={item.icon} className="size-5" />
+        </span>
+        <span className="sr-only">{item.label}</span>
+      </button>
+    ) : (
+      <button
+        key={item.id}
+        onClick={() => setTab(item.id)}
+        aria-current={tab === item.id ? "page" : undefined}
+        className={`flex flex-col items-center justify-center gap-0.5 rounded-[16px] text-[9px] leading-none transition ${
+          tab === item.id
+            ? "bg-[#1D8575] text-white shadow-[0_6px_15px_rgba(19,51,46,0.2)]"
+            : "text-[#557A73] hover:bg-[#DBEBE7] hover:text-[#1D8575]"
+        }`}
+      >
+        <UiIcon name={item.icon} className="size-[15px]" />
+        <span>{item.label}</span>
+      </button>
+    ),
+  );
 
   return (
     <>
-      <nav className="fixed inset-x-3 bottom-3 z-40 grid h-16 grid-cols-3 items-stretch gap-1 rounded-[22px] border border-[#B7D0CA] bg-white/95 p-1 shadow-[0_14px_38px_rgba(19,51,46,0.16)] backdrop-blur-xl md:hidden">
-        {items.map((item) =>
-          item.id === "ai" ? (
-            <button
-              key={item.id}
-              onClick={() => setTab(item.id)}
-              aria-current={tab === item.id ? "page" : undefined}
-              className="flex h-full items-center justify-center"
-            >
-              <span
-                className={`grid size-11 place-items-center rounded-full border-[3px] border-[#F1F8F6] shadow-[0_8px_18px_rgba(4,184,156,0.4)] transition ${
-                  tab === item.id ? "scale-105 bg-[#04B89C] text-white" : "bg-[#1D8575] text-white"
-                }`}
-              >
-                <UiIcon name={item.icon} className="size-5" />
-              </span>
-              <span className="sr-only">{item.label}</span>
-            </button>
-          ) : (
-            <button
-              key={item.id}
-              onClick={() => setTab(item.id)}
-              aria-current={tab === item.id ? "page" : undefined}
-              className={`flex flex-col items-center justify-center gap-0.5 rounded-[16px] text-[9px] leading-none transition ${
-                tab === item.id
-                  ? "bg-[#1D8575] text-white shadow-[0_6px_15px_rgba(19,51,46,0.2)]"
-                  : "text-[#557A73] hover:bg-[#DBEBE7] hover:text-[#1D8575]"
-              }`}
-            >
-              <UiIcon name={item.icon} className="size-[15px]" />
-              <span>{item.label}</span>
-            </button>
-          ),
-        )}
+      <nav aria-label="Main navigation" className="fixed inset-x-3 bottom-3 z-40 grid h-16 grid-cols-3 items-stretch gap-1 rounded-[22px] border border-[#B7D0CA] bg-white/95 p-1 shadow-[0_14px_38px_rgba(19,51,46,0.16)] backdrop-blur-xl md:hidden">
+        {navigationButtons}
       </nav>
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[230px] flex-col border-r border-[#CADFD9] bg-[#F1F8F6] p-5 md:flex">
         <div className="flex items-center gap-3 px-2 py-3">
@@ -2423,20 +2425,9 @@ function Navigation({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
           <span className="text-[15px] tracking-[-0.02em]">Quietly</span>
         </div>
         <p className="mt-10 px-3 text-[9px] uppercase tracking-[0.16em] text-[#6D8F88]">Your space</p>
-        <div className="mt-3 space-y-2">
-          {items.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setTab(item.id)}
-              className={`flex w-full items-center gap-3 rounded-[14px] p-2 text-left text-xs transition ${tab === item.id ? "bg-white shadow-[0_5px_18px_rgba(19,51,46,0.06)]" : "hover:bg-white/60"}`}
-            >
-              <span className="grid size-9 place-items-center rounded-[10px]" style={{ backgroundColor: tab === item.id ? item.active : item.color }}>
-                {item.short}
-              </span>
-              {item.label}
-            </button>
-          ))}
-        </div>
+        <nav aria-label="Main navigation" className="mt-3 grid auto-rows-[56px] gap-2">
+          {navigationButtons}
+        </nav>
         <div className="mt-auto rounded-[18px] bg-white p-4">
           <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D8F88]">Next digest</p>
           <p className="mt-2 text-[13px]">Today at 6:00 PM</p>
