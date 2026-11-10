@@ -663,6 +663,7 @@ function MenuDrawer({
   onProfile,
   onSettings,
   onDigest,
+  onAnalytics,
   unreadCount,
 }: {
   open: boolean;
@@ -670,11 +671,13 @@ function MenuDrawer({
   onProfile: () => void;
   onSettings: () => void;
   onDigest: () => void;
+  onAnalytics: () => void;
   unreadCount: number;
 }) {
   const items: { label: string; detail: string; icon: UiIconName; onClick: () => void; badge?: number }[] = [
     { label: "Profile", detail: "Connected accounts & details", icon: "user", onClick: onProfile },
     { label: "Notifications", detail: "Your grouped summary", icon: "bell", onClick: onDigest, badge: unreadCount },
+    { label: "Analytics", detail: "Time saved & digital wellbeing", icon: "trending", onClick: onAnalytics },
     { label: "Settings", detail: "Appearance & preferences", icon: "settings", onClick: onSettings },
   ];
 
@@ -747,6 +750,12 @@ function SettingsView({
   onThemeChange: (night: boolean) => void;
   onBack: () => void;
 }) {
+  const [digestFrequency, setDigestFrequency] = useState<"Daily" | "Every 3 hours" | "Weekly">("Daily");
+  const [quietHours, setQuietHours] = useState(true);
+  const [grouping, setGrouping] = useState<"Minimal" | "Balanced" | "Aggressive">("Balanced");
+  const [syncDevices, setSyncDevices] = useState(true);
+  const [toast, setToast] = useState("");
+
   return (
     <div className="min-h-dvh bg-[#1D8575] pb-10 [font-family:'Manrope:Medium',sans-serif]">
       <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
@@ -756,6 +765,14 @@ function SettingsView({
         <h1 className="absolute left-1/2 -translate-x-1/2 text-[14px]">Settings</h1>
         <span className="rounded-full bg-white/10 px-4 py-2 text-[10px] text-white/75">Preferences</span>
       </header>
+
+      {!!toast && (
+        <div className="mx-auto mt-3 w-fit max-w-[calc(100%_-_2rem)] px-4">
+          <button onClick={() => setToast("")} className="truncate rounded-full bg-[#0D2521] px-4 py-2 text-[9px] text-white shadow-lg">
+            {toast} · tap to dismiss
+          </button>
+        </div>
+      )}
 
       <div className="mx-auto w-full max-w-[820px] px-4 py-5 md:px-8 md:py-8">
         <section className="rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
@@ -832,6 +849,171 @@ function SettingsView({
               <span className={`absolute top-1 size-5 rounded-full bg-white shadow transition ${nightMode ? "left-6" : "left-1"}`} />
             </button>
           </div>
+        </section>
+
+        <section className="mt-5 rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+          <div className="border-b border-[#CADFD9] pb-6">
+            <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Alerts</p>
+            <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
+              Control what reaches you
+            </h2>
+            <p className="mt-2 text-[11px] leading-relaxed text-[#557A73]">
+              Choose how often Quietly checks your accounts and how aggressively it bundles pings into one summary.
+            </p>
+          </div>
+
+          <div className="mt-5">
+            <p className="text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">Digest frequency</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(["Daily", "Every 3 hours", "Weekly"] as const).map((option) => (
+                <button
+                  key={option}
+                  onClick={() => setDigestFrequency(option)}
+                  aria-pressed={digestFrequency === option}
+                  className={`rounded-full border px-4 py-2.5 text-xs transition ${
+                    digestFrequency === option
+                      ? "border-[#1D8575] bg-[#1D8575] text-white"
+                      : "border-[#CADFD9] bg-white text-[#13332E] hover:border-[#1D8575]"
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <p className="text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">Grouping sensitivity</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(["Minimal", "Balanced", "Aggressive"] as const).map((option) => (
+                <button
+                  key={option}
+                  onClick={() => setGrouping(option)}
+                  aria-pressed={grouping === option}
+                  className={`rounded-full border px-4 py-2.5 text-xs transition ${
+                    grouping === option
+                      ? "border-[#1D8575] bg-[#1D8575] text-white"
+                      : "border-[#CADFD9] bg-white text-[#13332E] hover:border-[#1D8575]"
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[10px] leading-relaxed text-[#6D8F88]">
+              {grouping === "Minimal" && "Only merges pings from the same post or thread."}
+              {grouping === "Balanced" && "Merges related activity across an hour into one summary."}
+              {grouping === "Aggressive" && "Bundles everything since your last digest into a single alert."}
+            </p>
+          </div>
+
+          <div className="mt-6 flex items-center justify-between rounded-[16px] bg-[#DBEBE7] p-4">
+            <div>
+              <p className="text-[11px] text-[#1D8575]">Quiet hours</p>
+              <p className="mt-1 text-[9px] text-[#6D8F88]">{quietHours ? "On · 10:00 PM – 7:00 AM" : "Off · alerts can arrive any time"}</p>
+            </div>
+            <button
+              onClick={() => setQuietHours(!quietHours)}
+              role="switch"
+              aria-checked={quietHours}
+              className={`relative h-7 w-12 rounded-full transition ${quietHours ? "bg-[#04B89C]" : "bg-[#9FBCB5]"}`}
+              aria-label="Toggle quiet hours"
+            >
+              <span className={`absolute top-1 size-5 rounded-full bg-white shadow transition ${quietHours ? "left-6" : "left-1"}`} />
+            </button>
+          </div>
+        </section>
+
+        <section className="mt-5 rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+          <div className="border-b border-[#CADFD9] pb-6">
+            <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Privacy & data</p>
+            <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
+              Manage your data
+            </h2>
+            <p className="mt-2 text-[11px] leading-relaxed text-[#557A73]">
+              Keep your preferences in sync across devices, or clear what's cached locally.
+            </p>
+          </div>
+
+          <div className="mt-5 flex items-center justify-between rounded-[16px] bg-[#DBEBE7] p-4">
+            <div>
+              <p className="text-[11px] text-[#1D8575]">Sync across devices</p>
+              <p className="mt-1 text-[9px] text-[#6D8F88]">{syncDevices ? "Preferences sync automatically" : "This device only"}</p>
+            </div>
+            <button
+              onClick={() => setSyncDevices(!syncDevices)}
+              role="switch"
+              aria-checked={syncDevices}
+              className={`relative h-7 w-12 rounded-full transition ${syncDevices ? "bg-[#04B89C]" : "bg-[#9FBCB5]"}`}
+              aria-label="Toggle sync across devices"
+            >
+              <span className={`absolute top-1 size-5 rounded-full bg-white shadow transition ${syncDevices ? "left-6" : "left-1"}`} />
+            </button>
+          </div>
+
+          <div className="mt-5 space-y-2">
+            <p className="text-[11px] font-semibold text-[#1D8575] [font-family:'Manrope:SemiBold',sans-serif]">Connected devices</p>
+            {[
+              { name: "This device", detail: "Windows · Active now" },
+              { name: "iPhone 15", detail: "Last synced 2 hours ago" },
+            ].map((device) => (
+              <div key={device.name} className="flex items-center justify-between rounded-[15px] border border-[#CADFD9] p-3">
+                <div>
+                  <p className="text-[12px] text-[#13332E]">{device.name}</p>
+                  <p className="mt-0.5 text-[9px] text-[#6D8F88]">{device.detail}</p>
+                </div>
+                <button
+                  onClick={() => setToast(`Signed out of ${device.name}`)}
+                  className="rounded-full border border-[#CADFD9] px-3 py-1.5 text-[9px] text-[#557A73] transition hover:border-[#1D8575] hover:text-[#1D8575]"
+                >
+                  Sign out
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setToast("Cached feed data cleared")}
+            className="mt-5 w-full rounded-[14px] border border-[#CADFD9] py-3 text-[11px] text-[#557A73] transition hover:border-[#1D8575] hover:text-[#1D8575]"
+          >
+            Clear cached feed data
+          </button>
+        </section>
+
+        <section className="mt-5 rounded-[22px] bg-white p-5 shadow-[0_20px_55px_rgba(13,37,33,0.2)] md:p-7">
+          <div className="border-b border-[#CADFD9] pb-6">
+            <p className="text-[10px] uppercase tracking-[0.17em] text-[#86A69F]">Account</p>
+            <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] text-[#1D8575] [font-family:'Manrope:ExtraBold',sans-serif]">
+              Account controls
+            </h2>
+          </div>
+
+          <div className="mt-5 flex items-center justify-between rounded-[16px] bg-[#DBEBE7] p-4">
+            <div>
+              <p className="text-[11px] text-[#1D8575]">Email</p>
+              <p className="mt-1 text-[9px] text-[#6D8F88]">ingrid.solheim@example.com</p>
+            </div>
+            <button
+              onClick={() => setToast("Password reset email sent")}
+              className="rounded-full border border-[#CADFD9] bg-white px-3 py-1.5 text-[9px] text-[#557A73] transition hover:border-[#1D8575] hover:text-[#1D8575]"
+            >
+              Change password
+            </button>
+          </div>
+
+          <button
+            onClick={() => setToast("Your data export is on its way — check your email shortly")}
+            className="mt-3 w-full rounded-[14px] border border-[#CADFD9] py-3 text-[11px] text-[#557A73] transition hover:border-[#1D8575] hover:text-[#1D8575]"
+          >
+            Download my data
+          </button>
+
+          <button
+            onClick={() => setToast("We've sent a confirmation link to delete your account")}
+            className="mt-3 w-full rounded-[14px] border border-[#E0A0A0] py-3 text-[11px] text-[#C0564F] transition hover:bg-[#FBEDEC]"
+          >
+            Delete account
+          </button>
         </section>
       </div>
     </div>
@@ -1130,6 +1312,24 @@ function ProfileView({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function AnalyticsView({ connected, onBack }: { connected: Platform[]; onBack: () => void }) {
+  return (
+    <div className="min-h-dvh bg-[#1D8575] pb-10 [font-family:'Manrope:Medium',sans-serif]">
+      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
+        <button onClick={onBack} className="rounded-full border border-white/20 px-4 py-2 text-[11px] transition hover:bg-white/10">
+          <span aria-hidden="true">←</span> Back
+        </button>
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-[14px]">Analytics</h1>
+        <span className="rounded-full bg-white/10 px-4 py-2 text-[10px] text-white/75">Digital wellbeing</span>
+      </header>
+
+      <div className="mx-auto w-full max-w-[820px] px-4 py-5 md:px-8 md:py-8">
+        <AnalyticsSection connected={connected} />
+      </div>
     </div>
   );
 }
@@ -1540,7 +1740,7 @@ function AiSummaryView({
   onAddPerson: (person: TrackedPerson) => void;
   onRemovePerson: (id: number) => void;
 }) {
-  const [section, setSection] = useState<"insights" | "circle" | "analytics">("insights");
+  const [section, setSection] = useState<"insights" | "circle">("insights");
   const platformSummaries: Record<Platform, { headline: string; summary: string; sentiment: string; topTopic: string; stat: string }> = {
     Instagram: {
       headline: "Mostly catching up with Jordan and weekend plans",
@@ -1582,7 +1782,6 @@ function AiSummaryView({
   const sections: { id: typeof section; label: string; icon: UiIconName; badge?: number }[] = [
     { id: "insights", label: "Insights", icon: "sparkle" },
     { id: "circle", label: "Close Circle", icon: "people", badge: people.length || undefined },
-    { id: "analytics", label: "Analytics", icon: "trending" },
   ];
 
   return (
@@ -1665,8 +1864,6 @@ function AiSummaryView({
       )}
 
       {section === "circle" && <CloseCircleSection people={people} onAdd={onAddPerson} onRemove={onRemovePerson} />}
-
-      {section === "analytics" && <AnalyticsSection connected={connected} />}
     </div>
   );
 }
@@ -2256,6 +2453,7 @@ export default function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [nightMode, setNightMode] = useState(
     () => typeof window !== "undefined" && window.localStorage.getItem("quietly-theme") === "dark",
@@ -2367,6 +2565,14 @@ export default function App() {
     );
   }
 
+  if (analyticsOpen) {
+    return (
+      <div className={nightMode ? "theme-dark" : ""}>
+        <AnalyticsView connected={connectedAccounts} onBack={() => setAnalyticsOpen(false)} />
+      </div>
+    );
+  }
+
   return (
     <div className={nightMode ? "theme-dark" : ""}>
       <div className="min-h-dvh bg-[#F1F8F6] text-[#0D2521] md:pl-[230px]">
@@ -2414,6 +2620,10 @@ export default function App() {
           onDigest={() => {
             setMenuOpen(false);
             setSummaryOpen(true);
+          }}
+          onAnalytics={() => {
+            setMenuOpen(false);
+            setAnalyticsOpen(true);
           }}
         />
       </div>
