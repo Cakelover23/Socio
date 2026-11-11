@@ -2478,14 +2478,19 @@ export default function App() {
   };
 
   // Keep the swipe track centered on the active tab whenever it changes via
-  // the bottom nav (not just via a finger drag), with no animation.
+  // the bottom nav (not just via a finger drag), with no animation. Also
+  // re-run when returning from a full-screen sub-view (profile/settings/
+  // digest/analytics), since those early-return and unmount the swipe track
+  // entirely — without this, the track's fresh DOM node comes back with no
+  // transform applied at all, showing the wrong (often empty) panel.
   useLayoutEffect(() => {
     if (!SWIPE_TAB_ORDER.includes(tab)) return;
+    if (profileOpen || summaryOpen || settingsOpen || analyticsOpen) return;
     const track = swipeTrackRef.current;
     if (!track) return;
     const width = track.parentElement?.getBoundingClientRect().width ?? window.innerWidth;
     setTrackTransform(-width, false);
-  }, [tab]);
+  }, [tab, profileOpen, summaryOpen, settingsOpen, analyticsOpen]);
 
   const handleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
     const touch = event.touches[0];
