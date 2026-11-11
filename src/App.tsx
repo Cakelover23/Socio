@@ -2642,10 +2642,10 @@ export default function App() {
 
   return (
     <div className={nightMode ? "theme-dark" : ""}>
-      <div className="min-h-dvh bg-[#F1F8F6] text-[#0D2521] md:pl-[230px]">
+      <div className="h-dvh overflow-hidden bg-[#F1F8F6] text-[#0D2521] md:pl-[230px]">
         <Navigation tab={tab} setTab={setTab} />
         <main
-          className="min-h-dvh pb-24 md:pb-0"
+          className="flex h-full min-h-0 flex-col"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -2661,16 +2661,21 @@ export default function App() {
             }
           />
           {tab === "compose" ? (
-            <ComposeView onPublish={publish} onCancel={() => setTab("feeds")} />
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-24 md:pb-0">
+              <ComposeView onPublish={publish} onCancel={() => setTab("feeds")} />
+            </div>
           ) : (
-            <div className="overflow-hidden" style={{ touchAction: "pan-y" }}>
-              <div ref={swipeTrackRef} className="flex w-full">
+            <div className="min-h-0 flex-1 overflow-hidden" style={{ touchAction: "pan-y" }}>
+              <div ref={swipeTrackRef} className="flex h-full w-full">
                 {[
                   SWIPE_TAB_ORDER[SWIPE_TAB_ORDER.indexOf(tab) - 1],
                   tab,
                   SWIPE_TAB_ORDER[SWIPE_TAB_ORDER.indexOf(tab) + 1],
                 ].map((panelTab, index) => (
-                  <div key={panelTab ?? `empty-${index}`} className="w-full shrink-0">
+                  <div
+                    key={panelTab ?? `empty-${index}`}
+                    className="h-full w-full shrink-0 overflow-y-auto overscroll-contain pb-24 md:pb-0"
+                  >
                     {panelTab === "feeds" && (
                       <FeedView posts={posts} selectedPlatforms={selectedPlatforms} />
                     )}
