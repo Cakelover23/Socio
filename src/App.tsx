@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type Tab = "compose" | "feeds" | "messages" | "ai";
 
@@ -1870,11 +1870,9 @@ function AiSummaryView({
 
 function FeedView({
   posts,
-  onCompose,
   selectedPlatforms,
 }: {
   posts: typeof initialPosts;
-  onCompose: () => void;
   selectedPlatforms: Platform[];
 }) {
   const [liked, setLiked] = useState<number[]>([]);
@@ -1887,15 +1885,6 @@ function FeedView({
 
   return (
     <div className="feed-depth-background min-h-[calc(100dvh-72px)] w-full">
-      <button
-        onClick={onCompose}
-        className="fixed bottom-24 right-5 z-30 flex items-center gap-2 rounded-full bg-[#1D8575] px-5 py-3.5 text-[11px] text-white shadow-[0_14px_30px_rgba(19,51,46,0.3)] transition hover:bg-[#0D2521] md:bottom-8"
-        aria-label="New post"
-      >
-        <UiIcon name="plus" className="size-4" />
-        New post
-      </button>
-
       <div className="mx-auto w-full max-w-[760px] space-y-3 px-4 py-5 md:px-8 md:py-8">
         {filteredPosts.map((post) => {
           const isLiked = liked.includes(post.id);
@@ -2461,6 +2450,16 @@ export default function App() {
   const [connectedAccounts, setConnectedAccounts] = useState<Platform[]>(["Instagram", "LinkedIn"]);
   const [trackedPeople, setTrackedPeople] = useState<TrackedPerson[]>(initialTrackedPeople);
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([]);
+  // Mirrors `tab` for the header (title + Filters button) only. `tab` itself
+  // is deferred until a swipe's slide animation finishes (see handleTouchEnd)
+  // so the panel content doesn't jump mid-animation, but that made the header
+  // appear to lag a beat behind the finger. headerTab updates the instant the
+  // swipe direction is committed, so the header switches right away while the
+  // panels keep sliding.
+  const [headerTab, setHeaderTab] = useState<Tab>(tab);
+  useEffect(() => {
+    setHeaderTab(tab);
+  }, [tab]);
   const swipeTrackRef = useRef<HTMLDivElement>(null);
   const touchStateRef = useRef<{
     x: number;
@@ -2527,6 +2526,12 @@ export default function App() {
 
     const finalOffset = targetIndex === currentIndex + 1 ? -2 * width : targetIndex === currentIndex - 1 ? 0 : -width;
     setTrackTransform(finalOffset, true);
+
+    if (targetIndex !== currentIndex) {
+      // Switch the header (title + Filters button) the instant the swipe
+      // commits, rather than waiting for the slide animation to finish.
+      setHeaderTab(SWIPE_TAB_ORDER[targetIndex]);
+    }
 
     const track = swipeTrackRef.current;
     const onTransitionEnd = () => {
@@ -2642,10 +2647,10 @@ export default function App() {
           onTouchCancel={handleTouchEnd}
         >
           <AppHeader
-            tab={tab}
+            tab={headerTab}
             onMenu={() => setMenuOpen(true)}
             filtersSlot={
-              tab === "feeds" ? (
+              headerTab === "feeds" ? (
                 <FeedFilters selectedPlatforms={selectedPlatforms} onToggle={togglePlatformFilter} />
               ) : undefined
             }
@@ -2662,7 +2667,7 @@ export default function App() {
                 ].map((panelTab, index) => (
                   <div key={panelTab ?? `empty-${index}`} className="w-full shrink-0">
                     {panelTab === "feeds" && (
-                      <FeedView posts={posts} onCompose={() => setTab("compose")} selectedPlatforms={selectedPlatforms} />
+                      <FeedView posts={posts} selectedPlatforms={selectedPlatforms} />
                     )}
                     {panelTab === "messages" && <MessagesView />}
                     {panelTab === "ai" && (
@@ -2679,6 +2684,16 @@ export default function App() {
             </div>
           )}
         </main>
+        {headerTab === "feeds" && (
+          <button
+            onClick={() => setTab("compose")}
+            className="fixed bottom-24 right-5 z-30 flex items-center gap-2 rounded-full bg-[#1D8575] px-5 py-3.5 text-[11px] text-white shadow-[0_14px_30px_rgba(19,51,46,0.3)] transition hover:bg-[#0D2521] md:bottom-8"
+            aria-label="New post"
+          >
+            <UiIcon name="plus" className="size-4" />
+            New post
+          </button>
+        )}
         <MenuDrawer
           open={menuOpen}
           onClose={() => setMenuOpen(false)}
