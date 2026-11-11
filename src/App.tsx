@@ -591,7 +591,7 @@ function AppHeader({
 }) {
   const titles: Record<Tab, string> = { compose: "New Post", feeds: "Feeds", messages: "Messages", ai: "AI Insights" };
   return (
-    <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-[#CADFD9] bg-[#F1F8F6]/95 px-5 backdrop-blur-xl md:px-8">
+    <header className="sticky top-0 z-30 flex min-h-[72px] items-center justify-between pt-[env(safe-area-inset-top)] border-b border-[#CADFD9] bg-[#F1F8F6]/95 px-5 backdrop-blur-xl md:px-8">
       <div className="flex items-center">{filtersSlot}</div>
       <h1 className="absolute left-1/2 -translate-x-1/2 text-[15px] tracking-[-0.01em]">{titles[tab]}</h1>
       <button
@@ -758,7 +758,7 @@ function SettingsView({
 
   return (
     <div className="min-h-dvh bg-[#1D8575] pb-10 [font-family:'Manrope:Medium',sans-serif]">
-      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
+      <header className="sticky top-0 z-30 flex min-h-[72px] items-center justify-between pt-[env(safe-area-inset-top)] border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
         <button onClick={onBack} className="rounded-full border border-white/20 px-4 py-2 text-[11px] transition hover:bg-white/10">
           <span aria-hidden="true">←</span> Back
         </button>
@@ -1057,7 +1057,7 @@ function ProfileView({
 
   return (
     <div className="min-h-dvh bg-[#1D8575] pb-10 [font-family:'Manrope:Medium',sans-serif]">
-      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
+      <header className="sticky top-0 z-30 flex min-h-[72px] items-center justify-between pt-[env(safe-area-inset-top)] border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
         <button
           onClick={onBack}
           className="rounded-full border border-white/20 px-4 py-2 text-[11px] transition hover:bg-white/10"
@@ -1319,7 +1319,7 @@ function ProfileView({
 function AnalyticsView({ connected, onBack }: { connected: Platform[]; onBack: () => void }) {
   return (
     <div className="min-h-dvh bg-[#1D8575] pb-10 [font-family:'Manrope:Medium',sans-serif]">
-      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
+      <header className="sticky top-0 z-30 flex min-h-[72px] items-center justify-between pt-[env(safe-area-inset-top)] border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
         <button onClick={onBack} className="rounded-full border border-white/20 px-4 py-2 text-[11px] transition hover:bg-white/10">
           <span aria-hidden="true">←</span> Back
         </button>
@@ -1637,7 +1637,7 @@ function SummaryView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="min-h-dvh bg-[#1D8575] pb-10 [font-family:'Manrope:Medium',sans-serif]">
-      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
+      <header className="sticky top-0 z-30 flex min-h-[72px] items-center justify-between pt-[env(safe-area-inset-top)] border-b border-white/10 bg-[#1D8575]/95 px-4 text-white backdrop-blur-xl md:px-8">
         <button onClick={onBack} className="rounded-full border border-white/20 px-4 py-2 text-[11px] transition hover:bg-white/10">
           <span aria-hidden="true">←</span> Back
         </button>
@@ -2382,7 +2382,7 @@ function Navigation({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
 
   return (
     <>
-      <nav className="fixed inset-x-3 bottom-3 z-40 grid h-16 grid-cols-3 items-stretch gap-1 rounded-[22px] border border-[#B7D0CA] bg-white/95 p-1 shadow-[0_14px_38px_rgba(19,51,46,0.16)] backdrop-blur-xl md:hidden">
+      <nav className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 grid h-16 grid-cols-3 items-stretch gap-1 rounded-[22px] border border-[#B7D0CA] bg-white/95 p-1 shadow-[0_14px_38px_rgba(19,51,46,0.16)] backdrop-blur-xl md:hidden">
         {items.map((item) =>
           item.id === "ai" ? (
             <button
@@ -2532,9 +2532,12 @@ export default function App() {
     const onTransitionEnd = () => {
       track?.removeEventListener("transitionend", onTransitionEnd);
       if (targetIndex !== currentIndex) {
+        // Let the tab-change effect snap the track back to center once the
+        // new panel order has rendered, instead of resetting it here. Doing
+        // it here would jump the transform before React re-renders the
+        // panels, flashing the previous page for a frame.
         setTab(SWIPE_TAB_ORDER[targetIndex]);
       }
-      setTrackTransform(-width, false);
     };
     track?.addEventListener("transitionend", onTransitionEnd, { once: true });
   };
